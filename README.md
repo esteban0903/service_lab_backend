@@ -107,3 +107,60 @@ To see an end-to-end interactive showcase demonstrating business rule enforcemen
      - `No single worker has all required skills: [python, react]` (skills exist across the team, but no individual worker has all of them).
 
 
+
+
+## Frontend
+
+The frontend is a single-page application built with React, Vite, and TypeScript using plain modern CSS (no third-party UI component libraries or heavy state frameworks).
+
+### Frontend Requirements
+- Node.js 20+
+- npm 10+
+
+### Run Frontend in Development
+To start the Vite development server with proxying to `http://localhost:8080`:
+- **Linux/macOS**:
+  ```bash
+  ./scripts/run-frontend.sh
+  ```
+- **Windows**:
+  ```cmd
+  scripts\run-frontend.bat
+  ```
+*(or run `npm run dev` inside `/frontend`)*
+
+The frontend UI will be accessible at `http://localhost:5173`.
+
+### Build Frontend for Production
+To typecheck and bundle the frontend into static assets:
+- **Linux/macOS**:
+  ```bash
+  ./scripts/build-frontend.sh
+  ```
+- **Windows**:
+  ```cmd
+  scripts\build-frontend.bat
+  ```
+*(or run `npm run build` inside `/frontend`)*
+
+### Running Backend + Frontend Together
+1. **Terminal 1 (Backend)**:
+   ```cmd
+   scripts\run.bat
+   ```
+2. **Terminal 2 (Frontend)**:
+   ```cmd
+   scripts\run-frontend.bat
+   ```
+3. Open `http://localhost:5173` in your browser. Click **"🌱 Reset & Seed Data"** in the top navigation to populate sample workers, tasks, and initial allocations.
+
+## Environment Variables
+
+| Variable | Target | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `CORS_ALLOWED_ORIGINS` | Backend | `http://localhost:5173` | Comma-separated allowed CORS origins |
+| `VITE_API_URL` | Frontend | *(empty / same origin)* | Base URL for API requests in deployed environments |
+| `DB_URL` | Backend (`prod`) | *(none)* | PostgreSQL JDBC URL (e.g. `jdbc:postgresql://host:5432/dbname`) |
+| `DB_USER` | Backend (`prod`) | *(none)* | PostgreSQL database username |
+| `DB_PASS` | Backend (`prod`) | *(none)* | PostgreSQL database password |
+| `SEED_ENABLED` | Backend (`prod`) | `false` | Enables `POST /api/seed` in production environments |
