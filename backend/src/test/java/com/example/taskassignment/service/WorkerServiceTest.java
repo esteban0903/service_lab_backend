@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.example.taskassignment.exception.ConflictException;
+import com.example.taskassignment.repository.AssignmentRepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,6 +31,9 @@ class WorkerServiceTest {
 
     @Mock
     private WorkerRepository workerRepository;
+
+    @Mock
+    private AssignmentRepository assignmentRepository;
 
     @InjectMocks
     private WorkerService workerService;
@@ -129,9 +134,10 @@ class WorkerServiceTest {
     }
 
     @Test
-    @DisplayName("deleteWorker should delete worker when it exists")
+    @DisplayName("deleteWorker should delete worker when it exists and has no assignments")
     void deleteWorker_shouldDelete() {
         when(workerRepository.findById(1L)).thenReturn(Optional.of(sampleWorker));
+        when(assignmentRepository.existsByWorkerId(1L)).thenReturn(false);
 
         workerService.deleteWorker(1L);
 
@@ -146,6 +152,59 @@ class WorkerServiceTest {
         assertThatThrownBy(() -> workerService.deleteWorker(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Worker not found with id: 99");
+    }
+
+    @Test
+    @DisplayName("SPEC Section 6: deleteWorker should throw ConflictException if worker has active assignments")
+    void deleteWorker_withAssignments_throwsConflict() {
+        when(workerRepository.findById(1L)).thenReturn(Optional.of(sampleWorker));
+        when(assignmentRepository.existsByWorkerId(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> workerService.deleteWorker(1L))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Cannot delete worker with active assignments");
+    }
+
+    @Test
+    @DisplayName("SPEC Section 6: updateWorker should throw ConflictException if worker has assignments and hoursPerDay changes")
+    void updateWorker_withAssignmentsHoursChanged_throwsConflict() {
+        when(workerRepository.findById(1L)).thenReturn(Optional.of(sampleWorker));
+        when(assignmentRepository.existsByWorkerId(1L)).thenReturn(true);
+
+        WorkerRequestDto updateDto = new WorkerRequestDto("Alice Smith", 6, Set.of("java", "sql"));
+
+        assertThatThrownBy(() -> workerService.updateWorker(1L, updateDto))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Cannot modify hoursPerDay or skills of a worker with active assignments");
+    }
+
+    @Test
+    @DisplayName("SPEC Section 6: updateWorker should throw ConflictException if worker has assignments and skills change")
+    void updateWorker_withAssignmentsSkillsChanged_throwsConflict() {
+        when(workerRepository.findById(1L)).thenReturn(Optional.of(sampleWorker));
+        when(assignmentRepository.existsByWorkerId(1L)).thenReturn(true);
+
+        WorkerRequestDto updateDto = new WorkerRequestDto("Alice Smith", 8, Set.of("java", "sql", "kotlin"));
+
+        assertThatThrownBy(() -> workerService.updateWorker(1L, updateDto))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Cannot modify hoursPerDay or skills of a worker with active assignments");
+    }
+
+    @Test
+    @DisplayName("SPEC Section 6: updateWorker should succeed if worker has assignments but only name changes")
+    void updateWorker_withAssignmentsOnlyNameChanged_succeeds() {
+        when(workerRepository.findById(1L)).thenReturn(Optional.of(sampleWorker));
+        when(assignmentRepository.existsByWorkerId(1L)).thenReturn(true);
+        when(workerRepository.save(any(Worker.class))).thenAnswer(i -> i.getArgument(0));
+
+        WorkerRequestDto updateDto = new WorkerRequestDto("Alice Johnson", 8, Set.of("java", "sql"));
+
+        WorkerResponseDto response = workerService.updateWorker(1L, updateDto);
+
+        assertThat(response.name()).isEqualTo("Alice Johnson");
+        assertThat(response.hoursPerDay()).isEqualTo(8);
+        assertThat(response.skills()).containsExactlyInAnyOrder("java", "sql");
     }
 }
 

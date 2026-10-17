@@ -3,7 +3,9 @@ package com.example.taskassignment.service;
 import com.example.taskassignment.domain.Worker;
 import com.example.taskassignment.dto.WorkerRequestDto;
 import com.example.taskassignment.dto.WorkerResponseDto;
+import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.ResourceNotFoundException;
+import com.example.taskassignment.repository.AssignmentRepository;
 import com.example.taskassignment.repository.WorkerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +18,11 @@ import java.util.Set;
 public class WorkerService {
 
     private final WorkerRepository workerRepository;
+    private final AssignmentRepository assignmentRepository;
 
-    public WorkerService(WorkerRepository workerRepository) {
+    public WorkerService(WorkerRepository workerRepository, AssignmentRepository assignmentRepository) {
         this.workerRepository = workerRepository;
+        this.assignmentRepository = assignmentRepository;
     }
 
     @Transactional(readOnly = true)
@@ -52,11 +56,18 @@ public class WorkerService {
         Worker worker = workerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Worker not found with id: " + id));
 
-        // TODO Phase 2: Check if worker has assignments. Editing hoursPerDay or skills of a worker with assignments must throw ConflictException (409).
+        Set<String> normalizedSkills = SkillUtils.normalizeSkills(dto.skills());
+
+        // SPEC Section 6: If worker has assignments, editing hoursPerDay or skills throws 409 Conflict.
+        if (assignmentRepository.existsByWorkerId(id)) {
+            if (worker.getHoursPerDay() != dto.hoursPerDay() || !worker.getSkills().equals(normalizedSkills)) {
+                throw new ConflictException("Cannot modify hoursPerDay or skills of a worker with active assignments");
+            }
+        }
 
         worker.setName(dto.name().trim());
         worker.setHoursPerDay(dto.hoursPerDay());
-        worker.setSkills(SkillUtils.normalizeSkills(dto.skills()));
+        worker.setSkills(normalizedSkills);
 
         Worker updated = workerRepository.save(worker);
         return WorkerResponseDto.fromEntity(updated);
@@ -66,9 +77,11 @@ public class WorkerService {
         Worker worker = workerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Worker not found with id: " + id));
 
-        // TODO Phase 2: Check if worker has assignments. Deleting a worker with assignments must throw ConflictException (409).
+        // SPEC Section 6: Deleting a worker with active assignments throws 409 Conflict.
+        if (assignmentRepository.existsByWorkerId(id)) {
+            throw new ConflictException("Cannot delete worker with active assignments");
+        }
 
         workerRepository.delete(worker);
     }
 }
-

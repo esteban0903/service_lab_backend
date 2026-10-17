@@ -4,7 +4,9 @@ import com.example.taskassignment.domain.Task;
 import com.example.taskassignment.domain.TaskStatus;
 import com.example.taskassignment.dto.TaskRequestDto;
 import com.example.taskassignment.dto.TaskResponseDto;
+import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.ResourceNotFoundException;
+import com.example.taskassignment.repository.AssignmentRepository;
 import com.example.taskassignment.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +19,11 @@ import java.util.Set;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final AssignmentRepository assignmentRepository;
 
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(TaskRepository taskRepository, AssignmentRepository assignmentRepository) {
         this.taskRepository = taskRepository;
+        this.assignmentRepository = assignmentRepository;
     }
 
     @Transactional(readOnly = true)
@@ -55,15 +59,22 @@ public class TaskService {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
-        // TODO Phase 2: Check if task is assigned. Editing effortHours or skills of an assigned task must throw ConflictException (409).
-        // Editing name or status is permitted even when assigned.
+        Set<String> normalizedSkills = SkillUtils.normalizeSkills(dto.skills());
+
+        // SPEC Section 6: If assigned, editing effortHours or skills throws 409 Conflict.
+        // Editing name or status is permitted.
+        if (assignmentRepository.existsByTaskId(id)) {
+            if (task.getEffortHours() != dto.effortHours() || !task.getSkills().equals(normalizedSkills)) {
+                throw new ConflictException("Cannot modify effortHours or skills of an assigned task. Unassign first.");
+            }
+        }
 
         task.setName(dto.name().trim());
         task.setEffortHours(dto.effortHours());
         if (dto.status() != null) {
             task.setStatus(dto.status());
         }
-        task.setSkills(SkillUtils.normalizeSkills(dto.skills()));
+        task.setSkills(normalizedSkills);
 
         Task updated = taskRepository.save(task);
         return TaskResponseDto.fromEntity(updated);
@@ -73,9 +84,9 @@ public class TaskService {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
-        // TODO Phase 2: Deleting a task cascades to its assignment and AssignmentDay records.
+        // SPEC Section 6: Deleting a task deletes its assignment and assignment days
+        assignmentRepository.findByTaskId(id).ifPresent(assignmentRepository::delete);
 
         taskRepository.delete(task);
     }
 }
-

@@ -2,6 +2,7 @@ package com.example.taskassignment.controller;
 
 import com.example.taskassignment.dto.WorkerRequestDto;
 import com.example.taskassignment.dto.WorkerResponseDto;
+import com.example.taskassignment.service.AssignmentService;
 import com.example.taskassignment.service.WorkerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -16,16 +17,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/workers")
 public class WorkerController {
 
     private final WorkerService workerService;
+    private final AssignmentService assignmentService;
 
-    public WorkerController(WorkerService workerService) {
+    public WorkerController(WorkerService workerService, AssignmentService assignmentService) {
         this.workerService = workerService;
+        this.assignmentService = assignmentService;
     }
 
     @GetMapping
@@ -36,6 +41,11 @@ public class WorkerController {
     @GetMapping("/{id}")
     public WorkerResponseDto getWorkerById(@PathVariable Long id) {
         return workerService.getWorkerById(id);
+    }
+
+    @GetMapping("/{id}/schedule")
+    public Map<LocalDate, Integer> getWorkerSchedule(@PathVariable Long id) {
+        return assignmentService.getWorkerSchedule(id);
     }
 
     @PostMapping
