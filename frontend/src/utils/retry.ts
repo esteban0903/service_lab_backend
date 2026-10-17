@@ -30,7 +30,7 @@ export async function executeWithRetry<T>(
   options?: RetryOptions
 ): Promise<T> {
   const slowThreshold = options?.slowThresholdMs ?? 3000;
-  const maxTotalDuration = options?.maxTotalDurationMs ?? 90000;
+  const maxTotalDuration = options?.maxTotalDurationMs ?? 150000;
   const initialDelay = options?.initialDelayMs ?? 2000;
   const backoffFactor = options?.backoffFactor ?? 1.5;
   const maxDelay = options?.maxDelayMs ?? 10000;

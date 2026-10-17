@@ -117,5 +117,29 @@ describe('retry utility', () => {
     expect(onWakingUpChange).toHaveBeenCalledWith(true);
     expect(onWakingUpChange).toHaveBeenLastCalledWith(false);
   });
+
+  it('defaults to 150 seconds (150,000ms) maximum retry window', async () => {
+    const onWakingUpChange = vi.fn();
+    const action = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+    let simulatedTime = 0;
+    const fakeSleep = vi.fn().mockImplementation(async (ms: number) => {
+      simulatedTime += ms;
+    });
+
+    await expect(
+      executeWithRetry(action, {
+        initialDelayMs: 30000,
+        backoffFactor: 2,
+        sleepFn: fakeSleep,
+        nowFn: () => simulatedTime,
+        onWakingUpChange,
+      })
+    ).rejects.toThrow('Failed to fetch');
+
+    expect(simulatedTime).toBeGreaterThanOrEqual(150000);
+    expect(onWakingUpChange).toHaveBeenCalledWith(true);
+    expect(onWakingUpChange).toHaveBeenLastCalledWith(false);
+  });
 });
 

@@ -110,7 +110,7 @@ export const App: React.FC = () => {
           <div className="alert-banner alert-waking" role="status">
             <div className="alert-content">
               <span className="alert-icon">⏳</span>
-              <span>The server is waking up, this can take up to a minute...</span>
+              <span>The server is waking up, this can take up to 2 minutes...</span>
             </div>
           </div>
         )}

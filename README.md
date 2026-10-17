@@ -91,6 +91,48 @@ ServiceLab/
 2. **Start Frontend**: In another terminal, run `./scripts/run-frontend.sh` (or `scripts\run-frontend.bat`).
 3. Open `http://localhost:5173` in your browser. The Vite development proxy forwards all `/api/*` calls to port `8080`.
 
+### Testing the Production Profile Locally
+You can test the application against a real PostgreSQL instance (e.g., a free database on [Neon](https://neon.tech) or local PostgreSQL) using the `prod` profile:
+
+1. **Set Environment Variables**:
+   - **Linux / macOS**:
+     ```bash
+     export SPRING_PROFILES_ACTIVE=prod
+     export DB_URL="jdbc:postgresql://ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require"
+     export DB_USER="neondb_owner"
+     export DB_PASS="your_neon_password"
+     export SEED_ENABLED=true
+     ```
+   - **Windows (PowerShell)**:
+     ```powershell
+     $env:SPRING_PROFILES_ACTIVE="prod"
+     $env:DB_URL="jdbc:postgresql://ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require"
+     $env:DB_USER="neondb_owner"
+     $env:DB_PASS="your_neon_password"
+     $env:SEED_ENABLED="true"
+     ```
+   - **Windows (CMD)**:
+     ```cmd
+     set SPRING_PROFILES_ACTIVE=prod
+     set DB_URL=jdbc:postgresql://ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require
+     set DB_USER=neondb_owner
+     set DB_PASS=your_neon_password
+     set SEED_ENABLED=true
+     ```
+2. **Start the Backend**:
+   ```bash
+   cd backend && mvn spring-boot:run
+   ```
+   *Flyway will automatically execute `V1__init_schema.sql` against the real PostgreSQL database and validate the schema.*
+3. **Run Seed & Demo in a Separate Terminal**:
+   ```bash
+   # Seed demo dataset
+   ./scripts/seed.sh       # or scripts\seed.bat
+   
+   # Run full end-to-end showcase
+   ./scripts/demo.sh       # or scripts\demo.bat
+   ```
+
 ---
 
 ## 5. Demo Data & Showcase Scripts
@@ -260,8 +302,8 @@ Follow these steps in order to deploy the application to cloud services.
 ### Cold-Start Handling & Troubleshooting
 - **Render Free Tier Spin-Down**: Render free instances enter sleep mode after 15 minutes of inactivity. When a request arrives, booting takes ~30–60 seconds.
 - **Built-in Frontend Protection**: The frontend automatically detects requests exceeding 3 seconds or failing with 502/network errors. It displays an amber banner:
-  > *⏳ The server is waking up, this can take up to a minute...*
-  and retries with exponential backoff for up to 90 seconds. Once the container is ready, data renders seamlessly without user intervention.
+  > *⏳ The server is waking up, this can take up to 2 minutes...*
+  and retries with exponential backoff for up to 150 seconds. Once the container is ready, data renders seamlessly without user intervention.
 - **Troubleshooting Common Issues**:
   - *Startup Error: DB_URL must start with 'jdbc:'*: The backend includes a strict startup validator (`DatabaseUrlValidatorInitializer`). Ensure `DB_URL` begins with `jdbc:postgresql://`.
   - *CORS blocked*: Verify `CORS_ALLOWED_ORIGINS` in Render matches your Vercel URL (without a trailing slash).
@@ -280,10 +322,10 @@ Follow these steps in order to deploy the application to cloud services.
   - `HealthControllerApiTest` & `ConfigControllerApiTest` (2 tests): Health and config endpoints.
   - `DatabaseUrlValidatorInitializerTest` (5 tests): JDBC prefix and production environment validation.
   - `CorsIntegrationTest` & Controller API tests (26 tests): HTTP endpoints, validation errors, header assertions.
-- **Frontend Vitest Tests (16 tests passing)**:
+- **Frontend Vitest Tests (17 tests passing)**:
   - `date.test.ts` (4 tests): Timezone drift prevention (formatting `"2026-10-19"` as `"Mon 19 Oct"` in America/Bogota).
   - `workload.test.ts` (6 tests): Monday calculations, 5-day grid allocations, workload status thresholds.
-  - `retry.test.ts` (6 tests): Exponential backoff, retryable vs non-retryable error identification, 90-second timeout enforcement.
+  - `retry.test.ts` (7 tests): Exponential backoff, retryable vs non-retryable error identification, 150-second timeout enforcement.
 
 ### What Was Not Tested
 - **Physical Browser Rendering**: Headless CLI environments do not verify GPU-rendered CSS hover tooltip animations or manual pointer clicks.
