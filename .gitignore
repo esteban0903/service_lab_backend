@@ -1,0 +1,30 @@
+# Build and Dependency Directories
+target/
+**/target/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# IDE and Editor Files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Environment and Secrets
+.env
+*.env
+*.env.local
+
+# OS Artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+

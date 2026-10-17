@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: task-assignment-backend
+  profiles:
+    default: dev
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
