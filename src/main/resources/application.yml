@@ -14,3 +14,8 @@ logging:
     org.hibernate: INFO
     org.hibernate.SQL: INFO
 
+app:
+  timezone: America/Bogota
+  seed:
+    enabled: true
+

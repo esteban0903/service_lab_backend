@@ -20,6 +20,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -338,5 +339,40 @@ class AutoAssignmentServiceTest {
         LocalDate saturday = LocalDate.of(2026, 10, 17);
         AutoAssignmentResultDto resultWithSaturday = autoAssignmentService.autoAssign(saturday);
         assertThat(resultWithSaturday.assigned().getFirst().startDate()).isEqualTo(LocalDate.of(2026, 10, 19));
+    }
+
+    @Test
+    @DisplayName("9. Clock at 2026-10-17T23:30 America/Bogota is treated as Saturday (not UTC Sunday 2026-10-18)")
+    void autoAssign_bogotaTimezone_usesSaturdayNotUtcSunday() {
+        // 2026-10-17T23:30 in America/Bogota corresponds to 2026-10-18T04:30Z in UTC
+        ZoneId bogotaZone = ZoneId.of("America/Bogota");
+        ZonedDateTime bogotaDateTime = ZonedDateTime.of(2026, 10, 17, 23, 30, 0, 0, bogotaZone);
+        Clock bogotaClock = Clock.fixed(bogotaDateTime.toInstant(), bogotaZone);
+
+        // Verify clock LocalDate.now() is Saturday 2026-10-17, NOT Sunday 2026-10-18
+        assertThat(LocalDate.now(bogotaClock)).isEqualTo(LocalDate.of(2026, 10, 17));
+        assertThat(LocalDate.now(Clock.fixed(bogotaDateTime.toInstant(), ZoneId.of("UTC")))).isEqualTo(LocalDate.of(2026, 10, 18));
+
+        AutoAssignmentService serviceWithBogota = new AutoAssignmentService(
+                taskRepository,
+                workerRepository,
+                assignmentRepository,
+                assignmentDayRepository,
+                calendarService,
+                bogotaClock
+        );
+
+        Worker w = new Worker("Worker", 8, Set.of("java"));
+        w.setId(1L);
+        when(workerRepository.findAll()).thenReturn(List.of(w));
+
+        Task t = new Task("Task", 4, TaskStatus.NOT_DONE, Set.of("java"));
+        t.setId(10L);
+        when(taskRepository.findUnassignedNotDoneTasks()).thenReturn(List.of(t));
+        when(assignmentDayRepository.findWorkerSchedule(1L)).thenReturn(Collections.emptyList());
+
+        // When startDate is null, it resolves to Saturday 2026-10-17 (Bogota time), which rolls to Monday 2026-10-19
+        AutoAssignmentResultDto result = serviceWithBogota.autoAssign(null);
+        assertThat(result.assigned().getFirst().startDate()).isEqualTo(LocalDate.of(2026, 10, 19));
     }
 }
