@@ -4,3 +4,4 @@ public record AppConfigDto(
         boolean seedEnabled
 ) {
 }
+

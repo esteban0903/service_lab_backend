@@ -459,6 +459,23 @@ body {
   color: var(--color-primary);
 }
 
+.alert-waking {
+  background-color: #fefce8;
+  border: 1px solid #fef08a;
+  border-left: 4px solid #eab308;
+  color: #854d0e;
+  animation: wakingPulse 2s infinite ease-in-out;
+}
+
+@keyframes wakingPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
 .alert-close {
   background: none;
   border: none;

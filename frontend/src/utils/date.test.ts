@@ -25,3 +25,4 @@ describe('Date Utilities', () => {
     expect(getNextMonday(wednesday)).toBe('2026-10-19');
   });
 });
+

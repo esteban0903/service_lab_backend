@@ -11,8 +11,30 @@ import type {
   WorkerRequestDto,
   WorkerResponseDto,
 } from '../types';
+import { executeWithRetry } from '../utils/retry';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
+
+type WakingUpListener = (isWakingUp: boolean) => void;
+const wakingUpListeners: Set<WakingUpListener> = new Set();
+let wakingUpCount = 0;
+
+export function onServerWakingUp(listener: WakingUpListener): () => void {
+  wakingUpListeners.add(listener);
+  return () => {
+    wakingUpListeners.delete(listener);
+  };
+}
+
+function notifyWakingUpChange(isWaking: boolean) {
+  if (isWaking) {
+    wakingUpCount++;
+  } else {
+    wakingUpCount = Math.max(0, wakingUpCount - 1);
+  }
+  const status = wakingUpCount > 0;
+  wakingUpListeners.forEach((fn) => fn(status));
+}
 
 export class ApiError extends Error {
   public status: number;
@@ -26,7 +48,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function rawRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
   const headers = {
     'Content-Type': 'application/json',
@@ -68,6 +90,12 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   }
 
   return isJson ? await response.json() : ({} as T);
+}
+
+async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  return executeWithRetry(() => rawRequest<T>(endpoint, options), {
+    onWakingUpChange: notifyWakingUpChange,
+  });
 }
 
 export const api = {

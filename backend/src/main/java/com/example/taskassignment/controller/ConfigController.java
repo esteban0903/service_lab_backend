@@ -21,3 +21,4 @@ public class ConfigController {
         return new AppConfigDto(seedEnabled);
     }
 }
+

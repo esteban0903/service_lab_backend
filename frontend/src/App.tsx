@@ -3,7 +3,7 @@ import { TasksView } from './views/TasksView';
 import { WorkersView } from './views/WorkersView';
 import { AssignmentsView } from './views/AssignmentsView';
 import { WorkloadView } from './views/WorkloadView';
-import { api, ApiError } from './api/client';
+import { api, ApiError, onServerWakingUp } from './api/client';
 import { AlertBanner } from './components/AlertBanner';
 
 type TabType = 'tasks' | 'workers' | 'assignments' | 'workload';
@@ -12,10 +12,16 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('assignments');
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
   const [seedEnabled, setSeedEnabled] = useState<boolean>(false);
+  const [isServerWakingUp, setIsServerWakingUp] = useState<boolean>(false);
   const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
   // View reload trigger
   const [reloadKey, setReloadKey] = useState<number>(0);
+
+  useEffect(() => {
+    const unsubscribe = onServerWakingUp((waking) => setIsServerWakingUp(waking));
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     api.getConfig()
@@ -100,6 +106,14 @@ export const App: React.FC = () => {
       </header>
 
       <main className="main-content">
+        {isServerWakingUp && (
+          <div className="alert-banner alert-waking" role="status">
+            <div className="alert-content">
+              <span className="alert-icon">⏳</span>
+              <span>The server is waking up, this can take up to a minute...</span>
+            </div>
+          </div>
+        )}
         <AlertBanner type="success" message={globalSuccess} onClose={() => setGlobalSuccess(null)} />
         <AlertBanner type="error" message={globalError} onClose={() => setGlobalError(null)} />
 

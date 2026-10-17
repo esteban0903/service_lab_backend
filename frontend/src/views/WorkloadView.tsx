@@ -250,3 +250,4 @@ export const WorkloadView: React.FC = () => {
     </div>
   );
 };
+

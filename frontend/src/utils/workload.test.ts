@@ -144,3 +144,4 @@ describe('Workload Grid Computation Logic', () => {
     expect(brunoRow.cells['2026-10-21'].status).toBe('partial');
   });
 });
+
