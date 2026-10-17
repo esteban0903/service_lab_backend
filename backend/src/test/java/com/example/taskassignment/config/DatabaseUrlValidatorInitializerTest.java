@@ -86,3 +86,4 @@ class DatabaseUrlValidatorInitializerTest {
         assertThatCode(() -> initializer.initialize(context)).doesNotThrowAnyException();
     }
 }
+

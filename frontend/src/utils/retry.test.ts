@@ -118,3 +118,4 @@ describe('retry utility', () => {
     expect(onWakingUpChange).toHaveBeenLastCalledWith(false);
   });
 });
+

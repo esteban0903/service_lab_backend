@@ -29,3 +29,4 @@ class HealthControllerApiTest {
                 .andExpect(jsonPath("$.status").value("UP"));
     }
 }
+
