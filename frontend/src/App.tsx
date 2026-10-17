@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TasksView } from './views/TasksView';
 import { WorkersView } from './views/WorkersView';
 import { AssignmentsView } from './views/AssignmentsView';
@@ -10,10 +10,17 @@ type TabType = 'tasks' | 'workers' | 'assignments';
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('assignments');
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
+  const [seedEnabled, setSeedEnabled] = useState<boolean>(false);
   const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
   // View reload trigger
   const [reloadKey, setReloadKey] = useState<number>(0);
+
+  useEffect(() => {
+    api.getConfig()
+      .then((cfg) => setSeedEnabled(cfg.seedEnabled))
+      .catch(() => setSeedEnabled(false));
+  }, []);
 
   const handleSeedData = async () => {
     if (!window.confirm('Reset database and seed demo data (5 workers, 12 tasks, 2 assignments)?')) {
@@ -70,15 +77,17 @@ export const App: React.FC = () => {
             </button>
           </nav>
 
-          <button
-            type="button"
-            className="btn btn-sm btn-outline"
-            onClick={handleSeedData}
-            disabled={isSeeding}
-            title="Wipe database and repopulate with demo dataset"
-          >
-            {isSeeding ? 'Seeding...' : '🌱 Reset & Seed Data'}
-          </button>
+          {seedEnabled && (
+            <button
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={handleSeedData}
+              disabled={isSeeding}
+              title="Wipe database and repopulate with demo dataset"
+            >
+              {isSeeding ? 'Seeding...' : '🌱 Reset & Seed Data'}
+            </button>
+          )}
         </div>
       </header>
 

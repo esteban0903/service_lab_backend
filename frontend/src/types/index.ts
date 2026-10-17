@@ -86,3 +86,8 @@ export interface ErrorResponse {
   message: string;
 }
 
+
+
+export interface AppConfigDto {
+  seedEnabled: boolean;
+}

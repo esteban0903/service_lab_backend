@@ -1,4 +1,5 @@
 import type {
+  AppConfigDto,
   AssignmentRequestDto,
   AssignmentResponseDto,
   AutoAssignmentRequestDto,
@@ -125,4 +126,7 @@ export const api = {
 
   // Seed
   seed: () => request<SeedSummaryDto>('/api/seed', { method: 'POST' }),
+
+  // Config
+  getConfig: () => request<AppConfigDto>('/api/config'),
 };
