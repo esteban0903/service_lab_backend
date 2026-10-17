@@ -38,3 +38,4 @@ public class DatabaseUrlValidatorInitializer implements ApplicationContextInitia
         }
     }
 }
+
