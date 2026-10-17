@@ -2,7 +2,10 @@ package com.example.taskassignment.controller;
 
 import com.example.taskassignment.dto.AssignmentRequestDto;
 import com.example.taskassignment.dto.AssignmentResponseDto;
+import com.example.taskassignment.dto.AutoAssignmentRequestDto;
+import com.example.taskassignment.dto.AutoAssignmentResultDto;
 import com.example.taskassignment.service.AssignmentService;
+import com.example.taskassignment.service.AutoAssignmentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +25,11 @@ import java.util.List;
 public class AssignmentController {
 
     private final AssignmentService assignmentService;
+    private final AutoAssignmentService autoAssignmentService;
 
-    public AssignmentController(AssignmentService assignmentService) {
+    public AssignmentController(AssignmentService assignmentService, AutoAssignmentService autoAssignmentService) {
         this.assignmentService = assignmentService;
+        this.autoAssignmentService = autoAssignmentService;
     }
 
     @GetMapping
@@ -40,6 +45,11 @@ public class AssignmentController {
                 request.startDate()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/auto")
+    public AutoAssignmentResultDto autoAssign(@RequestBody(required = false) AutoAssignmentRequestDto request) {
+        return autoAssignmentService.autoAssign(request != null ? request.startDate() : null);
     }
 
     @DeleteMapping("/{id}")
