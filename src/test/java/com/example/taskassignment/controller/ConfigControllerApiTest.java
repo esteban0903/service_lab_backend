@@ -29,3 +29,4 @@ class ConfigControllerApiTest {
                 .andExpect(jsonPath("$.seedEnabled").value(true));
     }
 }
+
