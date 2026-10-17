@@ -3,18 +3,6 @@ set -e
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 
-format_json() {
-  if command -v jq >/dev/null 2>&1; then
-    jq .
-  elif command -v python3 >/dev/null 2>&1; then
-    python3 -m json.tool
-  elif command -v python >/dev/null 2>&1; then
-    python -m json.tool
-  else
-    cat
-  fi
-}
-
 echo "================================================================="
 echo "               SERVICE LAB - DEMO SHOWCASE SCRIPT                "
 echo "================================================================="
@@ -26,23 +14,32 @@ echo "-----------------------------------------------------------------"
 echo "STEP 1: Seed Demo Data"
 echo "-----------------------------------------------------------------"
 echo "Request: POST $BASE_URL/api/seed"
-SEED_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$BASE_URL/api/seed" -H "Content-Type: application/json")
-SEED_BODY=$(echo "$SEED_RESPONSE" | sed -e '$d')
-SEED_STATUS=$(echo "$SEED_RESPONSE" | tail -n 1 | cut -d: -f2)
-
-echo "HTTP Status: $SEED_STATUS"
+SEED_BODY=$(curl -s -X POST "$BASE_URL/api/seed" -H "Content-Type: application/json")
 echo "Response:"
-echo "$SEED_BODY" | format_json
+echo "$SEED_BODY"
 echo ""
 
-# Fetch tasks and workers to retrieve IDs dynamically
+# Extract demoStartDate from seed response using standard POSIX shell
+DEMO_START_DATE=$(echo "$SEED_BODY" | grep -o '"demoStartDate":"[^"]*"' | cut -d'"' -f4)
+if [ -z "$DEMO_START_DATE" ]; then
+  DEMO_START_DATE="2026-10-19"
+fi
+echo "Resolved Demo Start Date from Seed: $DEMO_START_DATE"
+echo ""
+
+# Fetch tasks and workers to retrieve IDs dynamically by name (no jq or python required)
 TASKS_JSON=$(curl -s "$BASE_URL/api/tasks")
 WORKERS_JSON=$(curl -s "$BASE_URL/api/workers")
 
-# Extract IDs using python
-TASK_ID=$(python -c "import json, sys; tasks = json.loads(sys.stdin.read()); print(next(t['id'] for t in tasks if t['name'] == 'Customer Portal Frontend'))" <<< "$TASKS_JSON" 2>/dev/null || echo "8")
-DIEGO_ID=$(python -c "import json, sys; workers = json.loads(sys.stdin.read()); print(next(w['id'] for w in workers if w['name'] == 'Diego'))" <<< "$WORKERS_JSON" 2>/dev/null || echo "4")
-BRUNO_ID=$(python -c "import json, sys; workers = json.loads(sys.stdin.read()); print(next(w['id'] for w in workers if w['name'] == 'Bruno'))" <<< "$WORKERS_JSON" 2>/dev/null || echo "2")
+TASK_ID=$(echo "$TASKS_JSON" | tr '}' '\n' | grep '"name":"Customer Portal Frontend"' | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -n 1)
+DIEGO_ID=$(echo "$WORKERS_JSON" | tr '}' '\n' | grep '"name":"Diego"' | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -n 1)
+BRUNO_ID=$(echo "$WORKERS_JSON" | tr '}' '\n' | grep '"name":"Bruno"' | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -n 1)
+
+echo "Resolved IDs by Name:"
+echo "  - Task 'Customer Portal Frontend': ID=$TASK_ID"
+echo "  - Worker 'Diego': ID=$DIEGO_ID"
+echo "  - Worker 'Bruno': ID=$BRUNO_ID"
+echo ""
 
 # 2. Rejected manual assignment
 echo "-----------------------------------------------------------------"
@@ -51,18 +48,14 @@ echo "-----------------------------------------------------------------"
 echo "Attempting to assign 'Customer Portal Frontend' (requires [react, javascript])"
 echo "to worker 'Diego' (skills: [python, sql, docker])..."
 echo "Request: POST $BASE_URL/api/assignments"
-REJECT_BODY="{\"taskId\": $TASK_ID, \"workerId\": $DIEGO_ID, \"startDate\": \"2026-10-26\"}"
+REJECT_BODY="{\"taskId\": $TASK_ID, \"workerId\": $DIEGO_ID, \"startDate\": \"$DEMO_START_DATE\"}"
 echo "Payload: $REJECT_BODY"
-
-REJECT_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$BASE_URL/api/assignments" \
+echo ""
+echo "HTTP Response:"
+curl -s -i -X POST "$BASE_URL/api/assignments" \
   -H "Content-Type: application/json" \
-  -d "$REJECT_BODY")
-REJECT_RESP_BODY=$(echo "$REJECT_RESPONSE" | sed -e '$d')
-REJECT_STATUS=$(echo "$REJECT_RESPONSE" | tail -n 1 | cut -d: -f2)
-
-echo "HTTP Status: $REJECT_STATUS (Expected: 422 Unprocessable Entity)"
-echo "Response:"
-echo "$REJECT_RESP_BODY" | format_json
+  -d "$REJECT_BODY"
+echo ""
 echo ""
 
 # 3. Valid manual assignment
@@ -71,18 +64,14 @@ echo "STEP 3: Perform Valid Manual Assignment (Matching Skills -> 201)"
 echo "-----------------------------------------------------------------"
 echo "Assigning 'Customer Portal Frontend' to worker 'Bruno' (skills: [react, javascript, css])..."
 echo "Request: POST $BASE_URL/api/assignments"
-VALID_BODY="{\"taskId\": $TASK_ID, \"workerId\": $BRUNO_ID, \"startDate\": \"2026-10-26\"}"
+VALID_BODY="{\"taskId\": $TASK_ID, \"workerId\": $BRUNO_ID, \"startDate\": \"$DEMO_START_DATE\"}"
 echo "Payload: $VALID_BODY"
-
-VALID_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$BASE_URL/api/assignments" \
+echo ""
+echo "HTTP Response:"
+curl -s -i -X POST "$BASE_URL/api/assignments" \
   -H "Content-Type: application/json" \
-  -d "$VALID_BODY")
-VALID_RESP_BODY=$(echo "$VALID_RESPONSE" | sed -e '$d')
-VALID_STATUS=$(echo "$VALID_RESPONSE" | tail -n 1 | cut -d: -f2)
-
-echo "HTTP Status: $VALID_STATUS (Expected: 201 Created)"
-echo "Response:"
-echo "$VALID_RESP_BODY" | format_json
+  -d "$VALID_BODY"
+echo ""
 echo ""
 
 # 4. Auto-assignment
@@ -90,16 +79,16 @@ echo "-----------------------------------------------------------------"
 echo "STEP 4: Run Auto-Assignment Algorithm"
 echo "-----------------------------------------------------------------"
 echo "Request: POST $BASE_URL/api/assignments/auto"
-AUTO_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$BASE_URL/api/assignments/auto" \
-  -H "Content-Type: application/json" \
-  -d '{"startDate": "2026-10-26"}')
-AUTO_RESP_BODY=$(echo "$AUTO_RESPONSE" | sed -e '$d')
-AUTO_STATUS=$(echo "$AUTO_RESPONSE" | tail -n 1 | cut -d: -f2)
-
-echo "HTTP Status: $AUTO_STATUS (Expected: 200 OK)"
-echo "Response:"
-echo "$AUTO_RESP_BODY" | format_json
+AUTO_BODY="{\"startDate\": \"$DEMO_START_DATE\"}"
+echo "Payload: $AUTO_BODY"
 echo ""
+echo "HTTP Response:"
+curl -s -i -X POST "$BASE_URL/api/assignments/auto" \
+  -H "Content-Type: application/json" \
+  -d "$AUTO_BODY"
+echo ""
+echo ""
+
 echo "================================================================="
 echo "                     DEMO SHOWCASE FINISHED                      "
 echo "================================================================="

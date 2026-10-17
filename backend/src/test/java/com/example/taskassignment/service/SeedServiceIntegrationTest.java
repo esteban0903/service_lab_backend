@@ -53,6 +53,7 @@ class SeedServiceIntegrationTest {
         assertThat(firstRun.workersCreated()).isEqualTo(5);
         assertThat(firstRun.tasksCreated()).isEqualTo(12);
         assertThat(firstRun.assignmentsCreated()).isEqualTo(2);
+        assertThat(firstRun.demoStartDate()).isNotNull();
 
         assertThat(workerRepository.count()).isEqualTo(5);
         assertThat(taskRepository.count()).isEqualTo(12);
@@ -63,6 +64,7 @@ class SeedServiceIntegrationTest {
         assertThat(secondRun.workersCreated()).isEqualTo(5);
         assertThat(secondRun.tasksCreated()).isEqualTo(12);
         assertThat(secondRun.assignmentsCreated()).isEqualTo(2);
+        assertThat(secondRun.demoStartDate()).isEqualTo(firstRun.demoStartDate());
 
         assertThat(workerRepository.count()).isEqualTo(5);
         assertThat(taskRepository.count()).isEqualTo(12);
@@ -101,7 +103,8 @@ class SeedServiceIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.workersCreated").value(5))
                 .andExpect(jsonPath("$.tasksCreated").value(12))
-                .andExpect(jsonPath("$.assignmentsCreated").value(2));
+                .andExpect(jsonPath("$.assignmentsCreated").value(2))
+                .andExpect(jsonPath("$.demoStartDate").isNotEmpty());
     }
 
     @Test
@@ -122,3 +125,4 @@ class SeedServiceIntegrationTest {
                 .hasMessageContaining("Seed endpoint is disabled");
     }
 }
+

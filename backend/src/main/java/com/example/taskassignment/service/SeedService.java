@@ -112,6 +112,8 @@ public class SeedService {
 
         assignmentRepository.saveAll(List.of(a1, a2));
 
-        return new SeedSummaryDto(savedWorkers.size(), savedTasks.size(), 2);
+        return new SeedSummaryDto(savedWorkers.size(), savedTasks.size(), 2, nextMonday);
     }
 }
+
+

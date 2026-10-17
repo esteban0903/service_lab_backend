@@ -21,3 +21,4 @@ public class SeedController {
         return seedService.seed();
     }
 }
+
