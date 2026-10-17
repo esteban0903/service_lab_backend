@@ -22,6 +22,8 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import com.example.taskassignment.exception.ConflictException;
+import com.example.taskassignment.repository.AssignmentRepository;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +32,9 @@ class TaskServiceTest {
 
     @Mock
     private TaskRepository taskRepository;
+
+    @Mock
+    private AssignmentRepository assignmentRepository;
 
     @InjectMocks
     private TaskService taskService;
@@ -132,9 +137,10 @@ class TaskServiceTest {
     }
 
     @Test
-    @DisplayName("deleteTask should delete task when it exists")
+    @DisplayName("deleteTask should delete task and any existing assignment when it exists")
     void deleteTask_shouldDelete() {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(sampleTask));
+        when(assignmentRepository.findByTaskId(1L)).thenReturn(Optional.empty());
 
         taskService.deleteTask(1L);
 
@@ -149,6 +155,47 @@ class TaskServiceTest {
         assertThatThrownBy(() -> taskService.deleteTask(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Task not found with id: 99");
+    }
+
+    @Test
+    @DisplayName("SPEC Section 6: updateTask should throw ConflictException if task is assigned and effortHours changes")
+    void updateTask_assignedEffortChanged_throwsConflict() {
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(sampleTask));
+        when(assignmentRepository.existsByTaskId(1L)).thenReturn(true);
+
+        TaskRequestDto dto = new TaskRequestDto("Implement API", 12, TaskStatus.NOT_DONE, Set.of("java", "spring"));
+
+        assertThatThrownBy(() -> taskService.updateTask(1L, dto))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Cannot modify effortHours or skills of an assigned task");
+    }
+
+    @Test
+    @DisplayName("SPEC Section 6: updateTask should throw ConflictException if task is assigned and skills change")
+    void updateTask_assignedSkillsChanged_throwsConflict() {
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(sampleTask));
+        when(assignmentRepository.existsByTaskId(1L)).thenReturn(true);
+
+        TaskRequestDto dto = new TaskRequestDto("Implement API", 8, TaskStatus.NOT_DONE, Set.of("java", "spring", "docker"));
+
+        assertThatThrownBy(() -> taskService.updateTask(1L, dto))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Cannot modify effortHours or skills of an assigned task");
+    }
+
+    @Test
+    @DisplayName("SPEC Section 6: updateTask should succeed if task is assigned but only name or status changes")
+    void updateTask_assignedOnlyNameOrStatusChanged_succeeds() {
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(sampleTask));
+        when(assignmentRepository.existsByTaskId(1L)).thenReturn(true);
+        when(taskRepository.save(any(Task.class))).thenAnswer(i -> i.getArgument(0));
+
+        TaskRequestDto dto = new TaskRequestDto("New Task Name", 8, TaskStatus.DONE, Set.of("java", "spring"));
+
+        TaskResponseDto response = taskService.updateTask(1L, dto);
+
+        assertThat(response.name()).isEqualTo("New Task Name");
+        assertThat(response.status()).isEqualTo(TaskStatus.DONE);
     }
 }
 

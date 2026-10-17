@@ -300,20 +300,21 @@ class CalendarServiceTest {
         @Test
         @DisplayName("New 4. Long task spanning several weeks and month boundary: verify endDate and no weekend allocations")
         void plan_longTaskSpanningWeeksAndMonthBoundary() {
-            // 2026-10-19 is a Monday
-            LocalDate startDate = LocalDate.of(2026, 10, 19);
+            // 2026-10-26 is a Monday
+            LocalDate startDate = LocalDate.of(2026, 10, 26);
             int effortHours = 100;
             int hoursPerDay = 8;
 
             // 100h / 8h = 12 full days (96h) + 1 day with 4h = 13 working days total
-            // Week 1: Oct 19 to Oct 23 (5 days = 40h)
-            // Week 2: Oct 26 to Oct 30 (5 days = 40h, total 80h)
+            // Week 1: Oct 26 to Oct 30 (5 days = 40h)
             // Month boundary: Oct 31 (Sat), Nov 01 (Sun)
-            // Week 3: Nov 02 (Mon, 8h = 88h), Nov 03 (Tue, 8h = 96h), Nov 04 (Wed, 4h = 100h)
+            // Week 2: Nov 02 to Nov 06 (5 days = 40h, total 80h)
+            // Weekend: Nov 07 (Sat), Nov 08 (Sun)
+            // Week 3: Nov 09 (Mon, 8h = 88h), Nov 10 (Tue, 8h = 96h), Nov 11 (Wed, 4h = 100h)
             Placement placement = calendarService.plan(startDate, effortHours, hoursPerDay, Collections.emptyMap());
 
-            assertThat(placement.effectiveStartDate()).isEqualTo(LocalDate.of(2026, 10, 19)); // Monday
-            assertThat(placement.endDate()).isEqualTo(LocalDate.of(2026, 11, 4)); // Wednesday
+            assertThat(placement.effectiveStartDate()).isEqualTo(LocalDate.of(2026, 10, 26)); // Monday
+            assertThat(placement.endDate()).isEqualTo(LocalDate.of(2026, 11, 11)); // Wednesday
 
             int totalHours = placement.allocations().stream()
                     .mapToInt(DailyAllocation::hours)
@@ -329,7 +330,7 @@ class CalendarServiceTest {
                     });
 
             assertThat(placement.allocations()).hasSize(13);
-            assertThat(placement.allocations().getLast()).isEqualTo(new DailyAllocation(LocalDate.of(2026, 11, 4), 4));
+            assertThat(placement.allocations().getLast()).isEqualTo(new DailyAllocation(LocalDate.of(2026, 11, 11), 4));
         }
     }
 
