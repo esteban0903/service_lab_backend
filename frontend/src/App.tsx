@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { TasksView } from './views/TasksView';
 import { WorkersView } from './views/WorkersView';
 import { AssignmentsView } from './views/AssignmentsView';
+import { WorkloadView } from './views/WorkloadView';
 import { api, ApiError } from './api/client';
 import { AlertBanner } from './components/AlertBanner';
 
-type TabType = 'tasks' | 'workers' | 'assignments';
+type TabType = 'tasks' | 'workers' | 'assignments' | 'workload';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('assignments');
@@ -63,6 +64,13 @@ export const App: React.FC = () => {
             </button>
             <button
               type="button"
+              className={`nav-tab ${activeTab === 'workload' ? 'active' : ''}`}
+              onClick={() => setActiveTab('workload')}
+            >
+              Workload
+            </button>
+            <button
+              type="button"
               className={`nav-tab ${activeTab === 'tasks' ? 'active' : ''}`}
               onClick={() => setActiveTab('tasks')}
             >
@@ -98,6 +106,7 @@ export const App: React.FC = () => {
         {activeTab === 'tasks' && <TasksView key={`tasks-${reloadKey}`} />}
         {activeTab === 'workers' && <WorkersView key={`workers-${reloadKey}`} />}
         {activeTab === 'assignments' && <AssignmentsView key={`assignments-${reloadKey}`} />}
+        {activeTab === 'workload' && <WorkloadView key={`workload-${reloadKey}`} />}
       </main>
     </div>
   );
