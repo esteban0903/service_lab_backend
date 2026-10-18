@@ -1,7 +1,7 @@
 package com.example.taskassignment.repository;
 
-import com.example.taskassignment.model.Role;
-import com.example.taskassignment.model.User;
+import com.example.taskassignment.domain.Role;
+import com.example.taskassignment.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

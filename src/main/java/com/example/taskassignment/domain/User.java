@@ -1,6 +1,5 @@
-package com.example.taskassignment.model;
+package com.example.taskassignment.domain;
 
-import com.example.taskassignment.domain.Worker;
 import jakarta.persistence.*;
 
 import java.util.Objects;

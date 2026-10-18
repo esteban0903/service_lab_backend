@@ -1,6 +1,6 @@
 package com.example.taskassignment.dto;
 
-import com.example.taskassignment.model.Role;
+import com.example.taskassignment.domain.Role;
 
 public record UserProfileDto(
         Long id,

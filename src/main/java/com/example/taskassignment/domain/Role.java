@@ -1,4 +1,4 @@
-package com.example.taskassignment.model;
+package com.example.taskassignment.domain;
 
 public enum Role {
     ADMIN,

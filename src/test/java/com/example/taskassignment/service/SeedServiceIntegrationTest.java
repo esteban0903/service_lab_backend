@@ -138,11 +138,11 @@ class SeedServiceIntegrationTest {
     @DisplayName("Seed never deletes or modifies ADMIN users")
     void seed_neverDeletesOrModifiesAdminUsers() {
         // Ensure admin user exists
-        com.example.taskassignment.model.User admin = userRepository.findByEmail("admin@demo.com")
-                .orElseGet(() -> userRepository.save(new com.example.taskassignment.model.User(
+        com.example.taskassignment.domain.User admin = userRepository.findByEmail("admin@demo.com")
+                .orElseGet(() -> userRepository.save(new com.example.taskassignment.domain.User(
                         "admin@demo.com",
                         passwordEncoder.encode("Admin123!"),
-                        com.example.taskassignment.model.Role.ADMIN,
+                        com.example.taskassignment.domain.Role.ADMIN,
                         null
                 )));
         String initialPasswordHash = admin.getPasswordHash();
@@ -152,10 +152,10 @@ class SeedServiceIntegrationTest {
         seedService.seed();
 
         // Admin must still exist, untouched
-        com.example.taskassignment.model.User preservedAdmin = userRepository.findByEmail("admin@demo.com")
+        com.example.taskassignment.domain.User preservedAdmin = userRepository.findByEmail("admin@demo.com")
                 .orElseThrow(() -> new AssertionError("Admin user was deleted by seed!"));
 
-        assertThat(preservedAdmin.getRole()).isEqualTo(com.example.taskassignment.model.Role.ADMIN);
+        assertThat(preservedAdmin.getRole()).isEqualTo(com.example.taskassignment.domain.Role.ADMIN);
         assertThat(preservedAdmin.getPasswordHash()).isEqualTo(initialPasswordHash);
         assertThat(preservedAdmin.isEnabled()).isTrue();
         assertThat(preservedAdmin.getWorker()).isNull();

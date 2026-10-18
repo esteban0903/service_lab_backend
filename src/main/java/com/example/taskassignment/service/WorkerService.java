@@ -5,7 +5,7 @@ import com.example.taskassignment.dto.WorkerRequestDto;
 import com.example.taskassignment.dto.WorkerResponseDto;
 import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.ResourceNotFoundException;
-import com.example.taskassignment.model.User;
+import com.example.taskassignment.domain.User;
 import com.example.taskassignment.repository.AssignmentRepository;
 import com.example.taskassignment.repository.UserRepository;
 import com.example.taskassignment.repository.WorkerRepository;
