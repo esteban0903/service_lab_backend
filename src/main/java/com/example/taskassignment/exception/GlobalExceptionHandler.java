@@ -1,6 +1,6 @@
 package com.example.taskassignment.exception;
 
-import com.example.taskassignment.dto.ErrorResponse;
+import com.example.taskassignment.dto.common.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

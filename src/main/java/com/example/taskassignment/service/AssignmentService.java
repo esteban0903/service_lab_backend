@@ -5,7 +5,7 @@ import com.example.taskassignment.domain.AssignmentDay;
 import com.example.taskassignment.domain.Task;
 import com.example.taskassignment.domain.TaskStatus;
 import com.example.taskassignment.domain.Worker;
-import com.example.taskassignment.dto.AssignmentResponseDto;
+import com.example.taskassignment.dto.assignment.AssignmentResponseDto;
 import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.IncompatibleSkillsException;
 import com.example.taskassignment.exception.ResourceNotFoundException;

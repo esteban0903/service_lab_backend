@@ -1,4 +1,4 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.assignment;
 
 import jakarta.validation.constraints.NotNull;
 

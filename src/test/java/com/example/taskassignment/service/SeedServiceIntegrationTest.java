@@ -1,7 +1,7 @@
 package com.example.taskassignment.service;
 
-import com.example.taskassignment.dto.AutoAssignmentResultDto;
-import com.example.taskassignment.dto.SeedSummaryDto;
+import com.example.taskassignment.dto.assignment.AutoAssignmentResultDto;
+import com.example.taskassignment.dto.common.SeedSummaryDto;
 import com.example.taskassignment.exception.ResourceNotFoundException;
 import com.example.taskassignment.repository.AssignmentRepository;
 import com.example.taskassignment.repository.TaskRepository;

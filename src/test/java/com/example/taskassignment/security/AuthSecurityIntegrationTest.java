@@ -1,8 +1,8 @@
 package com.example.taskassignment.security;
 
-import com.example.taskassignment.dto.ChangePasswordRequestDto;
-import com.example.taskassignment.dto.LoginRequestDto;
-import com.example.taskassignment.dto.LoginResponseDto;
+import com.example.taskassignment.dto.auth.ChangePasswordRequestDto;
+import com.example.taskassignment.dto.auth.LoginRequestDto;
+import com.example.taskassignment.dto.auth.LoginResponseDto;
 import com.example.taskassignment.domain.Role;
 import com.example.taskassignment.domain.User;
 import com.example.taskassignment.repository.UserRepository;

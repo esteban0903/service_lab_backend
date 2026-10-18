@@ -1,8 +1,8 @@
 package com.example.taskassignment.controller;
 
-import com.example.taskassignment.dto.SkillCatalogItemDto;
-import com.example.taskassignment.dto.TaskCoverageRequestDto;
-import com.example.taskassignment.dto.TaskCoverageResponseDto;
+import com.example.taskassignment.dto.skill.SkillCatalogItemDto;
+import com.example.taskassignment.dto.task.TaskCoverageRequestDto;
+import com.example.taskassignment.dto.task.TaskCoverageResponseDto;
 import com.example.taskassignment.service.SkillService;
 import org.springframework.web.bind.annotation.*;
 

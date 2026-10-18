@@ -1,9 +1,9 @@
 package com.example.taskassignment.controller;
 
-import com.example.taskassignment.dto.AssignmentRequestDto;
-import com.example.taskassignment.dto.AssignmentResponseDto;
-import com.example.taskassignment.dto.AutoAssignmentRequestDto;
-import com.example.taskassignment.dto.AutoAssignmentResultDto;
+import com.example.taskassignment.dto.assignment.AssignmentRequestDto;
+import com.example.taskassignment.dto.assignment.AssignmentResponseDto;
+import com.example.taskassignment.dto.assignment.AutoAssignmentRequestDto;
+import com.example.taskassignment.dto.assignment.AutoAssignmentResultDto;
 import com.example.taskassignment.service.AssignmentService;
 import com.example.taskassignment.service.AutoAssignmentService;
 import jakarta.validation.Valid;

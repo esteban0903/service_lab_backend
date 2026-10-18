@@ -1,7 +1,8 @@
 package com.example.taskassignment.controller;
 
-import com.example.taskassignment.dto.WorkerRequestDto;
-import com.example.taskassignment.dto.WorkerResponseDto;
+import com.example.taskassignment.dto.worker.WorkerCredentialsRequestDto;
+import com.example.taskassignment.dto.worker.WorkerRequestDto;
+import com.example.taskassignment.dto.worker.WorkerResponseDto;
 import com.example.taskassignment.service.AssignmentService;
 import com.example.taskassignment.service.WorkerService;
 import jakarta.validation.Valid;
@@ -61,7 +62,7 @@ public class WorkerController {
 
     @PutMapping("/{id}/credentials")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateWorkerCredentials(@PathVariable Long id, @Valid @RequestBody com.example.taskassignment.dto.WorkerCredentialsRequestDto dto) {
+    public void updateWorkerCredentials(@PathVariable Long id, @Valid @RequestBody WorkerCredentialsRequestDto dto) {
         workerService.updateWorkerCredentials(id, dto);
     }
 

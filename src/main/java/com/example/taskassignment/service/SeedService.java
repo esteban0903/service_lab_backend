@@ -5,7 +5,7 @@ import com.example.taskassignment.domain.AssignmentDay;
 import com.example.taskassignment.domain.Task;
 import com.example.taskassignment.domain.TaskStatus;
 import com.example.taskassignment.domain.Worker;
-import com.example.taskassignment.dto.SeedSummaryDto;
+import com.example.taskassignment.dto.common.SeedSummaryDto;
 import com.example.taskassignment.exception.ResourceNotFoundException;
 import com.example.taskassignment.domain.Role;
 import com.example.taskassignment.domain.User;

@@ -4,7 +4,7 @@ import com.example.taskassignment.domain.Assignment;
 import com.example.taskassignment.domain.Task;
 import com.example.taskassignment.domain.TaskStatus;
 import com.example.taskassignment.domain.Worker;
-import com.example.taskassignment.dto.TaskStatusUpdateRequestDto;
+import com.example.taskassignment.dto.task.TaskStatusUpdateRequestDto;
 import com.example.taskassignment.repository.AssignmentRepository;
 import com.example.taskassignment.repository.TaskRepository;
 import com.example.taskassignment.repository.WorkerRepository;

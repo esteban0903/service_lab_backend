@@ -1,8 +1,8 @@
 package com.example.taskassignment.controller;
 
-import com.example.taskassignment.dto.AssignmentResponseDto;
-import com.example.taskassignment.dto.TaskResponseDto;
-import com.example.taskassignment.dto.TaskStatusUpdateRequestDto;
+import com.example.taskassignment.dto.assignment.AssignmentResponseDto;
+import com.example.taskassignment.dto.task.TaskResponseDto;
+import com.example.taskassignment.dto.task.TaskStatusUpdateRequestDto;
 import com.example.taskassignment.exception.BadRequestException;
 import com.example.taskassignment.service.AssignmentService;
 import com.example.taskassignment.service.TaskService;

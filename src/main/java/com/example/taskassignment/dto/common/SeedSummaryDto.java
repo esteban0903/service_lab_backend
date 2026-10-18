@@ -1,4 +1,4 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.common;
 
 import java.time.LocalDate;
 

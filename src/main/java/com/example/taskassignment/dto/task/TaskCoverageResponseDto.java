@@ -1,4 +1,6 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.task;
+
+import com.example.taskassignment.dto.skill.SkillCoverageItemDto;
 
 import java.util.List;
 

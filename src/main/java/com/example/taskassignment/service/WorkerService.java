@@ -1,8 +1,9 @@
 package com.example.taskassignment.service;
 
 import com.example.taskassignment.domain.Worker;
-import com.example.taskassignment.dto.WorkerRequestDto;
-import com.example.taskassignment.dto.WorkerResponseDto;
+import com.example.taskassignment.dto.worker.WorkerCredentialsRequestDto;
+import com.example.taskassignment.dto.worker.WorkerRequestDto;
+import com.example.taskassignment.dto.worker.WorkerResponseDto;
 import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.ResourceNotFoundException;
 import com.example.taskassignment.domain.User;
@@ -90,7 +91,7 @@ public class WorkerService {
         return WorkerResponseDto.fromEntity(saved, linkedEmail);
     }
 
-    public void updateWorkerCredentials(Long id, com.example.taskassignment.dto.WorkerCredentialsRequestDto dto) {
+    public void updateWorkerCredentials(Long id, WorkerCredentialsRequestDto dto) {
         Worker worker = workerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Worker not found with id: " + id));
         authService.setOrUpdateWorkerCredentials(id, dto.email(), dto.password(), worker);

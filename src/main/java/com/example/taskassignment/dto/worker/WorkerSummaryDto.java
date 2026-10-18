@@ -1,4 +1,4 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.worker;
 
 public record WorkerSummaryDto(
         Long id,

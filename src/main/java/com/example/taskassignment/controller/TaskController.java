@@ -1,7 +1,7 @@
 package com.example.taskassignment.controller;
 
-import com.example.taskassignment.dto.TaskRequestDto;
-import com.example.taskassignment.dto.TaskResponseDto;
+import com.example.taskassignment.dto.task.TaskRequestDto;
+import com.example.taskassignment.dto.task.TaskResponseDto;
 import com.example.taskassignment.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,4 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.worker;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

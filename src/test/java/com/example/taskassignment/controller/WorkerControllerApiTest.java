@@ -1,6 +1,8 @@
 package com.example.taskassignment.controller;
 
-import com.example.taskassignment.dto.WorkerRequestDto;
+import com.example.taskassignment.dto.auth.LoginRequestDto;
+import com.example.taskassignment.dto.worker.WorkerCredentialsRequestDto;
+import com.example.taskassignment.dto.worker.WorkerRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -199,8 +201,8 @@ class WorkerControllerApiTest {
         Number workerId = objectMapper.readTree(responseContent).get("id").numberValue();
 
         // Worker can log in
-        com.example.taskassignment.dto.LoginRequestDto loginRequest =
-                new com.example.taskassignment.dto.LoginRequestDto("elena.new@demo.com", "Secret123!");
+        LoginRequestDto loginRequest =
+                new LoginRequestDto("elena.new@demo.com", "Secret123!");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -294,12 +296,12 @@ class WorkerControllerApiTest {
         // Old login works
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.example.taskassignment.dto.LoginRequestDto("reset@demo.com", "OldPassword123!"))))
+                        .content(objectMapper.writeValueAsString(new LoginRequestDto("reset@demo.com", "OldPassword123!"))))
                 .andExpect(status().isOk());
 
         // Reset credentials
-        com.example.taskassignment.dto.WorkerCredentialsRequestDto creds =
-                new com.example.taskassignment.dto.WorkerCredentialsRequestDto("reset@demo.com", "NewPassword123!");
+        WorkerCredentialsRequestDto creds =
+                new WorkerCredentialsRequestDto("reset@demo.com", "NewPassword123!");
         mockMvc.perform(put("/api/workers/" + workerId + "/credentials")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(creds)))
@@ -308,13 +310,13 @@ class WorkerControllerApiTest {
         // Old password now fails with 401
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.example.taskassignment.dto.LoginRequestDto("reset@demo.com", "OldPassword123!"))))
+                        .content(objectMapper.writeValueAsString(new LoginRequestDto("reset@demo.com", "OldPassword123!"))))
                 .andExpect(status().isUnauthorized());
 
         // New password succeeds with 200
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.example.taskassignment.dto.LoginRequestDto("reset@demo.com", "NewPassword123!"))))
+                        .content(objectMapper.writeValueAsString(new LoginRequestDto("reset@demo.com", "NewPassword123!"))))
                 .andExpect(status().isOk());
     }
 

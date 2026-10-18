@@ -1,4 +1,4 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.auth;
 
 import com.example.taskassignment.domain.Role;
 

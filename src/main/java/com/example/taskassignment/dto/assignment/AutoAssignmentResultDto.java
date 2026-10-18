@@ -1,4 +1,6 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.assignment;
+
+import com.example.taskassignment.dto.task.UnassignedTaskDto;
 
 import java.util.List;
 

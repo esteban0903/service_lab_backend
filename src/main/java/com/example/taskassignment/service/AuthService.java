@@ -1,10 +1,10 @@
 package com.example.taskassignment.service;
 
 import com.example.taskassignment.domain.Worker;
-import com.example.taskassignment.dto.ChangePasswordRequestDto;
-import com.example.taskassignment.dto.LoginRequestDto;
-import com.example.taskassignment.dto.LoginResponseDto;
-import com.example.taskassignment.dto.UserProfileDto;
+import com.example.taskassignment.dto.auth.ChangePasswordRequestDto;
+import com.example.taskassignment.dto.auth.LoginRequestDto;
+import com.example.taskassignment.dto.auth.LoginResponseDto;
+import com.example.taskassignment.dto.auth.UserProfileDto;
 import com.example.taskassignment.exception.BadRequestException;
 import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.ResourceNotFoundException;

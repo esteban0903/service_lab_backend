@@ -2,8 +2,8 @@ package com.example.taskassignment.service;
 
 import com.example.taskassignment.domain.Task;
 import com.example.taskassignment.domain.TaskStatus;
-import com.example.taskassignment.dto.TaskRequestDto;
-import com.example.taskassignment.dto.TaskResponseDto;
+import com.example.taskassignment.dto.task.TaskRequestDto;
+import com.example.taskassignment.dto.task.TaskResponseDto;
 import com.example.taskassignment.exception.ResourceNotFoundException;
 import com.example.taskassignment.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;

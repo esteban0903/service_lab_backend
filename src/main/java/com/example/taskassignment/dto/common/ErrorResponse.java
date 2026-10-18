@@ -1,4 +1,4 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.common;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

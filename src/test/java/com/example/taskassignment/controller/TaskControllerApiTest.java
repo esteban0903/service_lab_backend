@@ -1,7 +1,7 @@
 package com.example.taskassignment.controller;
 
 import com.example.taskassignment.domain.TaskStatus;
-import com.example.taskassignment.dto.TaskRequestDto;
+import com.example.taskassignment.dto.task.TaskRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

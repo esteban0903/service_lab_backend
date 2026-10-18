@@ -1,6 +1,6 @@
 package com.example.taskassignment.controller;
 
-import com.example.taskassignment.dto.AppConfigDto;
+import com.example.taskassignment.dto.common.AppConfigDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

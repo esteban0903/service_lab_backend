@@ -1,6 +1,8 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.assignment;
 
 import com.example.taskassignment.domain.Assignment;
+import com.example.taskassignment.dto.task.TaskSummaryDto;
+import com.example.taskassignment.dto.worker.WorkerSummaryDto;
 
 import java.time.LocalDate;
 import java.util.List;

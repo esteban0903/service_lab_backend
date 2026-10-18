@@ -1,4 +1,4 @@
-package com.example.taskassignment.dto;
+package com.example.taskassignment.dto.worker;
 
 import com.example.taskassignment.domain.Worker;
 
