@@ -64,11 +64,8 @@ public class AssignmentService {
             throw new ConflictException("Task is already assigned");
         }
 
-        if (!worker.getSkills().containsAll(task.getSkills())) {
-            List<String> missingSkills = task.getSkills().stream()
-                    .filter(skill -> !worker.getSkills().contains(skill))
-                    .sorted()
-                    .toList();
+        if (!SkillUtils.hasAllSkills(worker.getSkills(), task.getSkills())) {
+            List<String> missingSkills = SkillUtils.findMissingSkills(worker.getSkills(), task.getSkills());
             throw new IncompatibleSkillsException("Worker is missing required skills: " + missingSkills);
         }
 

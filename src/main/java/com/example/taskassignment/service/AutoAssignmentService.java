@@ -96,7 +96,7 @@ public class AutoAssignmentService {
         List<TaskEligibility> eligibilityList = new ArrayList<>();
         for (Task task : unassignedTasks) {
             List<Worker> eligible = workers.stream()
-                    .filter(w -> w.getSkills().containsAll(task.getSkills()))
+                    .filter(w -> SkillUtils.hasAllSkills(w.getSkills(), task.getSkills()))
                     .toList();
             eligibilityList.add(new TaskEligibility(task, eligible));
         }
@@ -184,10 +184,7 @@ public class AutoAssignmentService {
     }
 
     private String determineUnassignedReason(Task task, Set<String> allWorkersSkills) {
-        List<String> missingFromAll = task.getSkills().stream()
-                .filter(skill -> !allWorkersSkills.contains(skill))
-                .sorted()
-                .toList();
+        List<String> missingFromAll = SkillUtils.findMissingSkills(allWorkersSkills, task.getSkills());
 
         if (!missingFromAll.isEmpty()) {
             return "No worker has skills: " + missingFromAll;

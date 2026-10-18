@@ -107,9 +107,9 @@ public class SkillService {
             }
         }
 
-        // 2. Exact match: workers having ALL requested skills (reusing containsAll rule)
+        // 2. Exact match: workers having ALL requested skills (reusing SkillUtils.hasAllSkills)
         int coveredBy = (int) workerSkillSets.stream()
-                .filter(wSkills -> wSkills.containsAll(normalizedRequired))
+                .filter(wSkills -> SkillUtils.hasAllSkills(wSkills, normalizedRequired))
                 .count();
 
         // 3. Warning wording distinguishing:
