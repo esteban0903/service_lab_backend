@@ -205,5 +205,35 @@ class AuthSecurityIntegrationTest {
                         .content(objectMapper.writeValueAsString(new LoginRequestDto("admin@demo.com", "NewSecret123!"))))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @DisplayName("POST /api/auth/change-password with wrong current password returns 401 Unauthorized")
+    void changePassword_wrongCurrentPassword_returns401() throws Exception {
+        LoginResponseDto login = authService.login(new LoginRequestDto("admin@demo.com", "Admin123!"));
+
+        ChangePasswordRequestDto request = new ChangePasswordRequestDto("WrongCurrentPass!", "NewValidSecret123!");
+
+        mockMvc.perform(post("/api/auth/change-password")
+                        .header("Authorization", "Bearer " + login.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status", is(401)));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/change-password with new password shorter than 8 characters returns 400 Bad Request")
+    void changePassword_tooShort_returns400() throws Exception {
+        LoginResponseDto login = authService.login(new LoginRequestDto("admin@demo.com", "Admin123!"));
+
+        ChangePasswordRequestDto request = new ChangePasswordRequestDto("Admin123!", "short");
+
+        mockMvc.perform(post("/api/auth/change-password")
+                        .header("Authorization", "Bearer " + login.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(400)));
+    }
 }
 

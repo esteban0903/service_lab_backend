@@ -31,6 +31,37 @@ class SkillUtilsTest {
     }
 
     @Test
+    @DisplayName("Should remove accents and diacritics via NFD decomposition")
+    void shouldRemoveAccentsAndDiacritics() {
+        List<String> rawSkills = List.of(
+                "Gestión",
+                "Café Con Leche",
+                "Programación",
+                "C# Básico",
+                "Node.JS Avanzado"
+        );
+
+        Set<String> normalized = SkillUtils.normalizeSkills(rawSkills);
+
+        assertThat(normalized)
+                .containsExactly("gestion", "cafe con leche", "programacion", "c# basico", "node.js avanzado");
+    }
+
+    @Test
+    @DisplayName("Should collapse repeated inner whitespace")
+    void shouldCollapseRepeatedInnerWhitespace() {
+        List<String> rawSkills = List.of(
+                "Spring    Boot",
+                "  Data \t\t Science  \n Machine   Learning  "
+        );
+
+        Set<String> normalized = SkillUtils.normalizeSkills(rawSkills);
+
+        assertThat(normalized)
+                .containsExactly("spring boot", "data science machine learning");
+    }
+
+    @Test
     @DisplayName("Should return empty set when skills list is null or empty")
     void shouldReturnEmptySetForNullOrEmpty() {
         assertThat(SkillUtils.normalizeSkills(null)).isEmpty();

@@ -102,6 +102,7 @@ public class WorkerService {
             throw new ConflictException("Cannot delete worker with active assignments");
         }
 
+        authService.deleteWorkerUser(id);
         workerRepository.delete(worker);
     }
 }

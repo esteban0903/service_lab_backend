@@ -179,5 +179,141 @@ class WorkerControllerApiTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
+
+    @Autowired
+    private com.example.taskassignment.repository.UserRepository userRepository;
+
+    @Test
+    @DisplayName("Worker created with credentials can log in and receives token with WORKER role and workerId")
+    void createWorker_withCredentials_canLogin() throws Exception {
+        WorkerRequestDto request = new WorkerRequestDto("Elena Demo", 8, Set.of("java"), "elena.new@demo.com", "Secret123!");
+
+        String responseContent = mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Number workerId = objectMapper.readTree(responseContent).get("id").numberValue();
+
+        // Worker can log in
+        com.example.taskassignment.dto.LoginRequestDto loginRequest =
+                new com.example.taskassignment.dto.LoginRequestDto("elena.new@demo.com", "Secret123!");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.role").value("WORKER"))
+                .andExpect(jsonPath("$.workerId").value(workerId.intValue()));
+    }
+
+    @Test
+    @DisplayName("Creating worker with duplicate email returns 409 Conflict")
+    void createWorker_duplicateEmail_returns409() throws Exception {
+        WorkerRequestDto request1 = new WorkerRequestDto("Worker One", 8, Set.of("java"), "dup@demo.com", "Secret123!");
+        mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request1)))
+                .andExpect(status().isCreated());
+
+        WorkerRequestDto request2 = new WorkerRequestDto("Worker Two", 6, Set.of("python"), "dup@demo.com", "Secret123!");
+        mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request2)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+    }
+
+    @Test
+    @DisplayName("Providing email without password (or password without email) returns 400 Bad Request")
+    void createWorker_partialCredentials_returns400() throws Exception {
+        WorkerRequestDto emailOnly = new WorkerRequestDto("Partial Worker", 8, Set.of("java"), "partial@demo.com", null);
+        mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emailOnly)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        WorkerRequestDto passwordOnly = new WorkerRequestDto("Partial Worker 2", 8, Set.of("java"), null, "Secret123!");
+        mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(passwordOnly)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("Deleting a worker removes its associated user")
+    void deleteWorker_removesAssociatedUser() throws Exception {
+        WorkerRequestDto request = new WorkerRequestDto("User Bound Worker", 8, Set.of("java"), "bound@demo.com", "Secret123!");
+        String responseContent = mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Number workerId = objectMapper.readTree(responseContent).get("id").numberValue();
+        org.assertj.core.api.Assertions.assertThat(userRepository.findByEmail("bound@demo.com")).isPresent();
+
+        mockMvc.perform(delete("/api/workers/" + workerId))
+                .andExpect(status().isNoContent());
+
+        org.assertj.core.api.Assertions.assertThat(userRepository.findByEmail("bound@demo.com")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Worker without credentials still works without user account")
+    void createWorker_withoutCredentials_worksWithoutUser() throws Exception {
+        WorkerRequestDto request = new WorkerRequestDto("No Creds Worker", 8, Set.of("java"));
+        String responseContent = mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Number workerId = objectMapper.readTree(responseContent).get("id").numberValue();
+        org.assertj.core.api.Assertions.assertThat(userRepository.findByWorkerId(workerId.longValue())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("PUT /api/workers/{id}/credentials resets password and the old password stops working")
+    void updateCredentials_resetsPasswordAndInvalidatesOldPassword() throws Exception {
+        WorkerRequestDto request = new WorkerRequestDto("Reset Target Worker", 8, Set.of("java"), "reset@demo.com", "OldPassword123!");
+        String responseContent = mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Number workerId = objectMapper.readTree(responseContent).get("id").numberValue();
+
+        // Old login works
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.example.taskassignment.dto.LoginRequestDto("reset@demo.com", "OldPassword123!"))))
+                .andExpect(status().isOk());
+
+        // Reset credentials
+        com.example.taskassignment.dto.WorkerCredentialsRequestDto creds =
+                new com.example.taskassignment.dto.WorkerCredentialsRequestDto("reset@demo.com", "NewPassword123!");
+        mockMvc.perform(put("/api/workers/" + workerId + "/credentials")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(creds)))
+                .andExpect(status().isNoContent());
+
+        // Old password now fails with 401
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.example.taskassignment.dto.LoginRequestDto("reset@demo.com", "OldPassword123!"))))
+                .andExpect(status().isUnauthorized());
+
+        // New password succeeds with 200
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.example.taskassignment.dto.LoginRequestDto("reset@demo.com", "NewPassword123!"))))
+                .andExpect(status().isOk());
+    }
 }
 

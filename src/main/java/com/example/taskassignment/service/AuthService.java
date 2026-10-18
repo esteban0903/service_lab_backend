@@ -193,4 +193,11 @@ public class AuthService {
             userRepository.save(newUser);
         }
     }
+
+    public void deleteWorkerUser(Long workerId) {
+        userRepository.findByWorkerId(workerId).ifPresent(user -> {
+            userRepository.delete(user);
+            userRepository.flush();
+        });
+    }
 }

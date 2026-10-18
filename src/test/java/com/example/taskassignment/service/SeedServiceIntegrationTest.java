@@ -127,5 +127,38 @@ class SeedServiceIntegrationTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Seed endpoint is disabled");
     }
+
+    @Autowired
+    private com.example.taskassignment.repository.UserRepository userRepository;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @Test
+    @DisplayName("Seed never deletes or modifies ADMIN users")
+    void seed_neverDeletesOrModifiesAdminUsers() {
+        // Ensure admin user exists
+        com.example.taskassignment.model.User admin = userRepository.findByEmail("admin@demo.com")
+                .orElseGet(() -> userRepository.save(new com.example.taskassignment.model.User(
+                        "admin@demo.com",
+                        passwordEncoder.encode("Admin123!"),
+                        com.example.taskassignment.model.Role.ADMIN,
+                        null
+                )));
+        String initialPasswordHash = admin.getPasswordHash();
+
+        // Run seed multiple times
+        seedService.seed();
+        seedService.seed();
+
+        // Admin must still exist, untouched
+        com.example.taskassignment.model.User preservedAdmin = userRepository.findByEmail("admin@demo.com")
+                .orElseThrow(() -> new AssertionError("Admin user was deleted by seed!"));
+
+        assertThat(preservedAdmin.getRole()).isEqualTo(com.example.taskassignment.model.Role.ADMIN);
+        assertThat(preservedAdmin.getPasswordHash()).isEqualTo(initialPasswordHash);
+        assertThat(preservedAdmin.isEnabled()).isTrue();
+        assertThat(preservedAdmin.getWorker()).isNull();
+    }
 }
 
