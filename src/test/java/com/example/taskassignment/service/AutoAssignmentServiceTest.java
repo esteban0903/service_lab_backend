@@ -375,4 +375,14 @@ class AutoAssignmentServiceTest {
         AutoAssignmentResultDto result = serviceWithBogota.autoAssign(null);
         assertThat(result.assigned().getFirst().startDate()).isEqualTo(LocalDate.of(2026, 10, 19));
     }
+
+    @Test
+    @DisplayName("10. autoAssign should throw BadRequestException when requestedStartDate is in the past")
+    void autoAssign_startDateInPast_throwsBadRequest() {
+        LocalDate pastDate = LocalDate.of(2026, 10, 14);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> autoAssignmentService.autoAssign(pastDate))
+                .isInstanceOf(com.example.taskassignment.exception.BadRequestException.class)
+                .hasMessageContaining("Start date cannot be in the past");
+    }
 }

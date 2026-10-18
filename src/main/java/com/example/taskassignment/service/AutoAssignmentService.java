@@ -8,6 +8,7 @@ import com.example.taskassignment.dto.assignment.AssignmentResponseDto;
 import com.example.taskassignment.dto.assignment.AutoAssignmentResultDto;
 import com.example.taskassignment.dto.task.TaskSummaryDto;
 import com.example.taskassignment.dto.task.UnassignedTaskDto;
+import com.example.taskassignment.exception.BadRequestException;
 import com.example.taskassignment.repository.AssignmentDayRepository;
 import com.example.taskassignment.repository.AssignmentRepository;
 import com.example.taskassignment.repository.TaskRepository;
@@ -52,7 +53,12 @@ public class AutoAssignmentService {
     }
 
     public AutoAssignmentResultDto autoAssign(LocalDate requestedStartDate) {
-        LocalDate startDate = requestedStartDate != null ? requestedStartDate : LocalDate.now(clock);
+        LocalDate today = LocalDate.now(clock);
+        if (requestedStartDate != null && requestedStartDate.isBefore(today)) {
+            throw new BadRequestException("Start date cannot be in the past: " + requestedStartDate);
+        }
+
+        LocalDate startDate = requestedStartDate != null ? requestedStartDate : today;
 
         // 1. Load all tasks with status NOT_DONE and no existing assignment
         List<Task> unassignedTasks = taskRepository.findUnassignedNotDoneTasks();

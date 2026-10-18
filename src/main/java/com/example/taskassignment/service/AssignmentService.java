@@ -6,6 +6,7 @@ import com.example.taskassignment.domain.Task;
 import com.example.taskassignment.domain.TaskStatus;
 import com.example.taskassignment.domain.Worker;
 import com.example.taskassignment.dto.assignment.AssignmentResponseDto;
+import com.example.taskassignment.exception.BadRequestException;
 import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.IncompatibleSkillsException;
 import com.example.taskassignment.exception.ResourceNotFoundException;
@@ -17,6 +18,7 @@ import com.example.taskassignment.repository.WorkerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,22 +34,30 @@ public class AssignmentService {
     private final TaskRepository taskRepository;
     private final WorkerRepository workerRepository;
     private final CalendarService calendarService;
+    private final Clock clock;
 
     public AssignmentService(AssignmentRepository assignmentRepository,
                              AssignmentDayRepository assignmentDayRepository,
                              TaskRepository taskRepository,
                              WorkerRepository workerRepository,
-                             CalendarService calendarService) {
+                             CalendarService calendarService,
+                             Clock clock) {
         this.assignmentRepository = assignmentRepository;
         this.assignmentDayRepository = assignmentDayRepository;
         this.taskRepository = taskRepository;
         this.workerRepository = workerRepository;
         this.calendarService = calendarService;
+        this.clock = clock;
     }
 
     public AssignmentResponseDto create(Long taskId, Long workerId, LocalDate startDate) {
         if (startDate == null) {
             throw new IllegalArgumentException("Start date is required");
+        }
+
+        LocalDate today = LocalDate.now(clock);
+        if (startDate.isBefore(today)) {
+            throw new BadRequestException("Start date cannot be in the past: " + startDate);
         }
 
         Task task = taskRepository.findById(taskId)
