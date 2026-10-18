@@ -5,13 +5,17 @@ import com.example.taskassignment.dto.WorkerRequestDto;
 import com.example.taskassignment.dto.WorkerResponseDto;
 import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.ResourceNotFoundException;
+import com.example.taskassignment.model.User;
 import com.example.taskassignment.repository.AssignmentRepository;
+import com.example.taskassignment.repository.UserRepository;
 import com.example.taskassignment.repository.WorkerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -20,17 +24,34 @@ public class WorkerService {
     private final WorkerRepository workerRepository;
     private final AssignmentRepository assignmentRepository;
     private final AuthService authService;
+    private final UserRepository userRepository;
 
-    public WorkerService(WorkerRepository workerRepository, AssignmentRepository assignmentRepository, AuthService authService) {
+    public WorkerService(
+            WorkerRepository workerRepository,
+            AssignmentRepository assignmentRepository,
+            AuthService authService,
+            UserRepository userRepository
+    ) {
         this.workerRepository = workerRepository;
         this.assignmentRepository = assignmentRepository;
         this.authService = authService;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
     public List<WorkerResponseDto> getAllWorkers() {
-        return workerRepository.findAll().stream()
-                .map(WorkerResponseDto::fromEntity)
+        List<Worker> workers = workerRepository.findAll();
+        if (workers.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> workerIds = workers.stream().map(Worker::getId).toList();
+        Map<Long, String> workerEmailMap = userRepository.findByWorkerIdIn(workerIds).stream()
+                .filter(u -> u.getWorker() != null)
+                .collect(Collectors.toMap(u -> u.getWorker().getId(), User::getEmail, (existing, replacement) -> existing));
+
+        return workers.stream()
+                .map(w -> WorkerResponseDto.fromEntity(w, workerEmailMap.get(w.getId())))
                 .toList();
     }
 
@@ -38,7 +59,8 @@ public class WorkerService {
     public WorkerResponseDto getWorkerById(Long id) {
         Worker worker = workerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Worker not found with id: " + id));
-        return WorkerResponseDto.fromEntity(worker);
+        String email = userRepository.findByWorkerId(id).map(User::getEmail).orElse(null);
+        return WorkerResponseDto.fromEntity(worker, email);
     }
 
     public WorkerResponseDto createWorker(WorkerRequestDto dto) {
@@ -59,11 +81,13 @@ public class WorkerService {
 
         Worker saved = workerRepository.save(worker);
 
+        String linkedEmail = null;
         if (hasEmail) {
             authService.createWorkerUser(saved, dto.email(), dto.temporaryPassword());
+            linkedEmail = dto.email().trim().toLowerCase();
         }
 
-        return WorkerResponseDto.fromEntity(saved);
+        return WorkerResponseDto.fromEntity(saved, linkedEmail);
     }
 
     public void updateWorkerCredentials(Long id, com.example.taskassignment.dto.WorkerCredentialsRequestDto dto) {
@@ -90,7 +114,8 @@ public class WorkerService {
         worker.setSkills(normalizedSkills);
 
         Worker updated = workerRepository.save(worker);
-        return WorkerResponseDto.fromEntity(updated);
+        String linkedEmail = userRepository.findByWorkerId(id).map(User::getEmail).orElse(null);
+        return WorkerResponseDto.fromEntity(updated, linkedEmail);
     }
 
     public void deleteWorker(Long id) {

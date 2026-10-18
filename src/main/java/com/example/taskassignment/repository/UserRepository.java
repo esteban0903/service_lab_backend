@@ -18,6 +18,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByWorkerId(Long workerId);
 
+    @Query("SELECT u FROM User u WHERE u.worker.id IN :workerIds")
+    java.util.List<User> findByWorkerIdIn(@org.springframework.data.repository.query.Param("workerIds") java.util.Collection<Long> workerIds);
+
     java.util.List<User> findByRole(Role role);
 
     @Modifying

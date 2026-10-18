@@ -14,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -314,6 +316,77 @@ class WorkerControllerApiTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new com.example.taskassignment.dto.LoginRequestDto("reset@demo.com", "NewPassword123!"))))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/workers/{id} for worker with credentials shows hasLogin=true and email, never password hash")
+    void getWorkerById_withCredentials_showsHasLoginTrueAndEmail_neverReturnsPasswordHash() throws Exception {
+        WorkerRequestDto request = new WorkerRequestDto("Worker With Login", 8, Set.of("java"), "worker.login@demo.com", "Password123!");
+        String responseContent = mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.hasLogin").value(true))
+                .andExpect(jsonPath("$.email").value("worker.login@demo.com"))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+
+        Number workerId = objectMapper.readTree(responseContent).get("id").numberValue();
+
+        mockMvc.perform(get("/api/workers/" + workerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasLogin").value(true))
+                .andExpect(jsonPath("$.email").value("worker.login@demo.com"))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("GET /api/workers/{id} for worker without credentials shows hasLogin=false and null email")
+    void getWorkerById_withoutCredentials_showsHasLoginFalseAndNullEmail() throws Exception {
+        WorkerRequestDto request = new WorkerRequestDto("Worker Without Login", 6, Set.of("sql"));
+        String responseContent = mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.hasLogin").value(false))
+                .andExpect(jsonPath("$.email").value(nullValue()))
+                .andReturn().getResponse().getContentAsString();
+
+        Number workerId = objectMapper.readTree(responseContent).get("id").numberValue();
+
+        mockMvc.perform(get("/api/workers/" + workerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasLogin").value(false))
+                .andExpect(jsonPath("$.email").value(nullValue()))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("GET /api/workers list endpoint shows hasLogin and email per worker and never returns password hashes")
+    void getAllWorkers_showsCorrectHasLoginAndEmailPerWorker() throws Exception {
+        WorkerRequestDto withCreds = new WorkerRequestDto("Worker Alpha", 8, Set.of("react"), "alpha@demo.com", "Password123!");
+        mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(withCreds)))
+                .andExpect(status().isCreated());
+
+        WorkerRequestDto withoutCreds = new WorkerRequestDto("Worker Beta", 7, Set.of("docker"));
+        mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(withoutCreds)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/workers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.name == 'Worker Alpha')].hasLogin", contains(true)))
+                .andExpect(jsonPath("$[?(@.name == 'Worker Alpha')].email", contains("alpha@demo.com")))
+                .andExpect(jsonPath("$[?(@.name == 'Worker Beta')].hasLogin", contains(false)))
+                .andExpect(jsonPath("$[?(@.name == 'Worker Beta')].email", contains(nullValue())))
+                .andExpect(jsonPath("$[*].password").doesNotExist())
+                .andExpect(jsonPath("$[*].passwordHash").doesNotExist());
     }
 }
 

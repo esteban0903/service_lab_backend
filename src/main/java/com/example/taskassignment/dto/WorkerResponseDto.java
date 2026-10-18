@@ -8,15 +8,26 @@ public record WorkerResponseDto(
         Long id,
         String name,
         int hoursPerDay,
-        Set<String> skills
+        Set<String> skills,
+        String email,
+        boolean hasLogin
 ) {
+    public WorkerResponseDto(Long id, String name, int hoursPerDay, Set<String> skills) {
+        this(id, name, hoursPerDay, skills, null, false);
+    }
+
     public static WorkerResponseDto fromEntity(Worker worker) {
+        return fromEntity(worker, null);
+    }
+
+    public static WorkerResponseDto fromEntity(Worker worker, String email) {
         return new WorkerResponseDto(
                 worker.getId(),
                 worker.getName(),
                 worker.getHoursPerDay(),
-                worker.getSkills()
+                worker.getSkills(),
+                email,
+                email != null && !email.isBlank()
         );
     }
 }
-
