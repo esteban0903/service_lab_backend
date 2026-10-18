@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 @Transactional
+@com.example.taskassignment.security.WithMockAdmin
 @DisplayName("SeedService and Demo Data Tests")
 class SeedServiceIntegrationTest {
 
@@ -114,6 +115,8 @@ class SeedServiceIntegrationTest {
                 workerRepository,
                 taskRepository,
                 assignmentRepository,
+                null,
+                null,
                 null,
                 null,
                 null,

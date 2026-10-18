@@ -35,6 +35,9 @@ class WorkerServiceTest {
     @Mock
     private AssignmentRepository assignmentRepository;
 
+    @Mock
+    private AuthService authService;
+
     @InjectMocks
     private WorkerService workerService;
 

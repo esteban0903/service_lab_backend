@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 @Transactional
+@com.example.taskassignment.security.WithMockAdmin
 @DisplayName("Auto-Assignment End-to-End Integration Tests")
 class AutoAssignmentIntegrationTest {
 

@@ -16,7 +16,14 @@ public record WorkerRequestDto(
         @Max(value = 24, message = "Hours per day must be between 1 and 24")
         Integer hoursPerDay,
 
-        Set<String> skills
+        Set<String> skills,
+
+        String email,
+
+        String temporaryPassword
 ) {
+    public WorkerRequestDto(String name, Integer hoursPerDay, Set<String> skills) {
+        this(name, hoursPerDay, skills, null, null);
+    }
 }
 

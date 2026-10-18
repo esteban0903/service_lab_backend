@@ -7,6 +7,8 @@ import com.example.taskassignment.domain.TaskStatus;
 import com.example.taskassignment.domain.Worker;
 import com.example.taskassignment.dto.SeedSummaryDto;
 import com.example.taskassignment.exception.ResourceNotFoundException;
+import com.example.taskassignment.model.Role;
+import com.example.taskassignment.model.User;
 import com.example.taskassignment.repository.AssignmentDayRepository;
 import com.example.taskassignment.repository.AssignmentRepository;
 import com.example.taskassignment.repository.TaskRepository;
@@ -31,6 +33,8 @@ public class SeedService {
     private final TaskRepository taskRepository;
     private final AssignmentRepository assignmentRepository;
     private final AssignmentDayRepository assignmentDayRepository;
+    private final com.example.taskassignment.repository.UserRepository userRepository;
+    private final AuthService authService;
     private final CalendarService calendarService;
     private final Clock clock;
     private final boolean seedEnabled;
@@ -39,6 +43,8 @@ public class SeedService {
                        TaskRepository taskRepository,
                        AssignmentRepository assignmentRepository,
                        AssignmentDayRepository assignmentDayRepository,
+                       com.example.taskassignment.repository.UserRepository userRepository,
+                       AuthService authService,
                        CalendarService calendarService,
                        Clock clock,
                        @Value("${app.seed.enabled:false}") boolean seedEnabled) {
@@ -46,6 +52,8 @@ public class SeedService {
         this.taskRepository = taskRepository;
         this.assignmentRepository = assignmentRepository;
         this.assignmentDayRepository = assignmentDayRepository;
+        this.userRepository = userRepository;
+        this.authService = authService;
         this.calendarService = calendarService;
         this.clock = clock;
         this.seedEnabled = seedEnabled;
@@ -56,11 +64,15 @@ public class SeedService {
             throw new ResourceNotFoundException("Seed endpoint is disabled");
         }
 
-        // Idempotent: delete existing data
+        // Idempotent: delete existing assignments, tasks, workers, and only WORKER users (preserve ADMIN)
         assignmentDayRepository.deleteAll();
         assignmentRepository.deleteAll();
         taskRepository.deleteAll();
+        List<User> existingWorkerUsers = userRepository.findByRole(com.example.taskassignment.model.Role.WORKER);
+        userRepository.deleteAll(existingWorkerUsers);
+        userRepository.flush();
         workerRepository.deleteAll();
+        workerRepository.flush();
 
         // 1. Create 5 Workers
         Worker ana = new Worker("Ana", 8, Set.of("java", "spring", "sql"));
@@ -70,8 +82,19 @@ public class SeedService {
         Worker elena = new Worker("Elena", 6, Set.of("java", "docker", "devops"));
 
         List<Worker> savedWorkers = workerRepository.saveAll(List.of(ana, bruno, carla, diego, elena));
+        workerRepository.flush();
         Worker savedAna = savedWorkers.get(0);
+        Worker savedBruno = savedWorkers.get(1);
+        Worker savedCarla = savedWorkers.get(2);
+        Worker savedDiego = savedWorkers.get(3);
         Worker savedElena = savedWorkers.get(4);
+
+        // Create a WORKER user for each demo worker
+        authService.createWorkerUser(savedAna, "ana@demo.com", "Worker123!");
+        authService.createWorkerUser(savedBruno, "bruno@demo.com", "Worker123!");
+        authService.createWorkerUser(savedCarla, "carla@demo.com", "Worker123!");
+        authService.createWorkerUser(savedDiego, "diego@demo.com", "Worker123!");
+        authService.createWorkerUser(savedElena, "elena@demo.com", "Worker123!");
 
         // 2. Create 12 Tasks
         Task t1 = new Task("Database Schema Migration", 8, TaskStatus.NOT_DONE, Set.of("java", "sql"));
@@ -88,6 +111,7 @@ public class SeedService {
         Task t12 = new Task("Authentication & Role Management", 8, TaskStatus.NOT_DONE, Set.of("java"));
 
         List<Task> savedTasks = taskRepository.saveAll(List.of(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12));
+        taskRepository.flush();
         Task savedT1 = savedTasks.get(0);
         Task savedT2 = savedTasks.get(1);
 

@@ -59,6 +59,12 @@ public class WorkerController {
         return workerService.updateWorker(id, dto);
     }
 
+    @PutMapping("/{id}/credentials")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateWorkerCredentials(@PathVariable Long id, @Valid @RequestBody com.example.taskassignment.dto.WorkerCredentialsRequestDto dto) {
+        workerService.updateWorkerCredentials(id, dto);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteWorker(@PathVariable Long id) {

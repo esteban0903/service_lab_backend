@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 @Transactional
+@com.example.taskassignment.security.WithMockAdmin
 class TaskControllerApiTest {
 
     @Autowired

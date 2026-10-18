@@ -15,6 +15,8 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
     boolean existsByWorkerId(Long workerId);
 
+    java.util.List<Assignment> findByWorkerId(Long workerId);
+
     void deleteByTaskId(Long taskId);
 }
 

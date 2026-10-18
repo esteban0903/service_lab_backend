@@ -114,5 +114,12 @@ public class AssignmentService {
         }
         return scheduleMap;
     }
+
+    @Transactional(readOnly = true)
+    public List<AssignmentResponseDto> getAssignmentsByWorkerId(Long workerId) {
+        return assignmentRepository.findByWorkerId(workerId).stream()
+                .map(AssignmentResponseDto::fromEntity)
+                .toList();
+    }
 }
 

@@ -89,4 +89,20 @@ public class TaskService {
 
         taskRepository.delete(task);
     }
+
+    public TaskResponseDto updateTaskStatusForWorker(Long taskId, Long workerId, TaskStatus newStatus) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
+
+        com.example.taskassignment.domain.Assignment assignment = assignmentRepository.findByTaskId(taskId)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Task is not assigned to you"));
+
+        if (!assignment.getWorker().getId().equals(workerId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Task is not assigned to you");
+        }
+
+        task.setStatus(newStatus);
+        Task saved = taskRepository.save(task);
+        return TaskResponseDto.fromEntity(saved);
+    }
 }

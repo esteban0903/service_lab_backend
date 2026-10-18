@@ -13,3 +13,9 @@ spring:
       enabled: true
       path: /h2-console
 
+app:
+  security:
+    admin:
+      email: ${ADMIN_EMAIL:admin@demo.com}
+      password: ${ADMIN_PASSWORD:Admin123!}
+

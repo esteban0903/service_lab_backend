@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 @Transactional
+@com.example.taskassignment.security.WithMockAdmin
 @DisplayName("Assignment Flow & Section 6 Rules Integration Tests")
 class AssignmentFlowIntegrationTest {
 
