@@ -62,17 +62,20 @@ class AssignmentFlowIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         Number task1Id = objectMapper.readTree(task1Res).get("id").numberValue();
 
-        // 3. Assign Task 1 starting Thursday 2026-10-15
-        LocalDate startThursday = LocalDate.of(2026, 10, 15);
+        // 3. Assign Task 1 starting next Thursday
+        LocalDate today = LocalDate.now();
+        LocalDate startThursday = today.with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.THURSDAY));
+        LocalDate nextFriday = startThursday.plusDays(1);
+
         AssignmentRequestDto assign1Req = new AssignmentRequestDto(task1Id.longValue(), workerId.longValue(), startThursday);
         String assign1Res = mockMvc.perform(post("/api/assignments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(assign1Req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.startDate").value("2026-10-15"))
-                .andExpect(jsonPath("$.endDate").value("2026-10-15"))
+                .andExpect(jsonPath("$.startDate").value(startThursday.toString()))
+                .andExpect(jsonPath("$.endDate").value(startThursday.toString()))
                 .andExpect(jsonPath("$.allocations", hasSize(1)))
-                .andExpect(jsonPath("$.allocations[0].date").value("2026-10-15"))
+                .andExpect(jsonPath("$.allocations[0].date").value(startThursday.toString()))
                 .andExpect(jsonPath("$.allocations[0].hours").value(6))
                 .andReturn().getResponse().getContentAsString();
         Number assign1Id = objectMapper.readTree(assign1Res).get("id").numberValue();
@@ -80,7 +83,7 @@ class AssignmentFlowIntegrationTest {
         // Check worker schedule: Thursday should have 6h booked
         mockMvc.perform(get("/api/workers/" + workerId + "/schedule"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.['2026-10-15']").value(6));
+                .andExpect(jsonPath("$.['" + startThursday + "']").value(6));
 
         // 4. Create Task 2 (5h, skills: [spring])
         TaskRequestDto task2Req = new TaskRequestDto("Task Two", 5, null, Set.of("spring"));
@@ -91,26 +94,26 @@ class AssignmentFlowIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         Number task2Id = objectMapper.readTree(task2Res).get("id").numberValue();
 
-        // 5. Assign Task 2 starting also on Thursday 2026-10-15
-        // Thursday has only 8 - 6 = 2h free capacity! Remaining 3h must spill to Friday 2026-10-16.
+        // 5. Assign Task 2 starting also on next Thursday
+        // Thursday has only 8 - 6 = 2h free capacity! Remaining 3h must spill to Friday.
         AssignmentRequestDto assign2Req = new AssignmentRequestDto(task2Id.longValue(), workerId.longValue(), startThursday);
         mockMvc.perform(post("/api/assignments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(assign2Req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.startDate").value("2026-10-15"))
-                .andExpect(jsonPath("$.endDate").value("2026-10-16"))
+                .andExpect(jsonPath("$.startDate").value(startThursday.toString()))
+                .andExpect(jsonPath("$.endDate").value(nextFriday.toString()))
                 .andExpect(jsonPath("$.allocations", hasSize(2)))
-                .andExpect(jsonPath("$.allocations[0].date").value("2026-10-15"))
+                .andExpect(jsonPath("$.allocations[0].date").value(startThursday.toString()))
                 .andExpect(jsonPath("$.allocations[0].hours").value(2))
-                .andExpect(jsonPath("$.allocations[1].date").value("2026-10-16"))
+                .andExpect(jsonPath("$.allocations[1].date").value(nextFriday.toString()))
                 .andExpect(jsonPath("$.allocations[1].hours").value(3));
 
         // Verify updated worker schedule: Thursday has 8h (full), Friday has 3h
         mockMvc.perform(get("/api/workers/" + workerId + "/schedule"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.['2026-10-15']").value(8))
-                .andExpect(jsonPath("$.['2026-10-16']").value(3));
+                .andExpect(jsonPath("$.['" + startThursday + "']").value(8))
+                .andExpect(jsonPath("$.['" + nextFriday + "']").value(3));
 
         // 6. Delete Assignment 1 -> frees capacity
         mockMvc.perform(delete("/api/assignments/" + assign1Id))
@@ -119,8 +122,8 @@ class AssignmentFlowIntegrationTest {
         // Verify Thursday now only has Task 2's 2h
         mockMvc.perform(get("/api/workers/" + workerId + "/schedule"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.['2026-10-15']").value(2))
-                .andExpect(jsonPath("$.['2026-10-16']").value(3));
+                .andExpect(jsonPath("$.['" + startThursday + "']").value(2))
+                .andExpect(jsonPath("$.['" + nextFriday + "']").value(3));
     }
 
     @Test
@@ -142,23 +145,27 @@ class AssignmentFlowIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         Number taskId = objectMapper.readTree(taskRes).get("id").numberValue();
 
-        // 2026-10-17 is Saturday -> effective start must be Monday 2026-10-19
-        LocalDate saturday = LocalDate.of(2026, 10, 17);
+        // Saturday moves to next Monday
+        LocalDate today = LocalDate.now();
+        LocalDate saturday = today.with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.SATURDAY));
+        LocalDate nextMonday = saturday.with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.MONDAY));
+
         AssignmentRequestDto assignReq = new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), saturday);
 
         mockMvc.perform(post("/api/assignments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(assignReq)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.startDate").value("2026-10-19"))
-                .andExpect(jsonPath("$.endDate").value("2026-10-19"))
-                .andExpect(jsonPath("$.allocations[0].date").value("2026-10-19"))
+                .andExpect(jsonPath("$.startDate").value(nextMonday.toString()))
+                .andExpect(jsonPath("$.endDate").value(nextMonday.toString()))
+                .andExpect(jsonPath("$.allocations[0].date").value(nextMonday.toString()))
                 .andExpect(jsonPath("$.allocations[0].hours").value(4));
     }
 
     @Test
     @DisplayName("SPEC Section 6: Cannot modify effortHours or skills of an assigned task -> 409")
     void cannotModifyAssignedTaskEffortOrSkills() throws Exception {
+        LocalDate startThursday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.THURSDAY));
         WorkerRequestDto workerReq = new WorkerRequestDto("Worker Alpha", 8, Set.of("java"));
         String workerRes = mockMvc.perform(post("/api/workers")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -176,7 +183,7 @@ class AssignmentFlowIntegrationTest {
         // Assign
         mockMvc.perform(post("/api/assignments")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), LocalDate.of(2026, 10, 15)))))
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), startThursday))))
                 .andExpect(status().isCreated());
 
         // Try to update effortHours -> 409
@@ -208,6 +215,7 @@ class AssignmentFlowIntegrationTest {
     @Test
     @DisplayName("SPEC Section 6: Deleting a worker with active assignments returns 409 Conflict")
     void cannotDeleteWorkerWithAssignments() throws Exception {
+        LocalDate startThursday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.THURSDAY));
         WorkerRequestDto workerReq = new WorkerRequestDto("Worker Beta", 8, Set.of("java"));
         String workerRes = mockMvc.perform(post("/api/workers")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -225,7 +233,7 @@ class AssignmentFlowIntegrationTest {
         // Assign
         mockMvc.perform(post("/api/assignments")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), LocalDate.of(2026, 10, 15)))))
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), startThursday))))
                 .andExpect(status().isCreated());
 
         // Try to delete worker -> 409
@@ -245,6 +253,7 @@ class AssignmentFlowIntegrationTest {
     @Test
     @DisplayName("SPEC Section 6: Deleting an assigned task cascades and deletes assignment and days")
     void deleteTask_cascadesAssignment() throws Exception {
+        LocalDate startThursday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.THURSDAY));
         WorkerRequestDto workerReq = new WorkerRequestDto("Worker Gamma", 8, Set.of("java"));
         String workerRes = mockMvc.perform(post("/api/workers")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -261,7 +270,7 @@ class AssignmentFlowIntegrationTest {
 
         mockMvc.perform(post("/api/assignments")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), LocalDate.of(2026, 10, 15)))))
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), startThursday))))
                 .andExpect(status().isCreated());
 
         // Delete task
@@ -271,6 +280,31 @@ class AssignmentFlowIntegrationTest {
         // Worker should now have 0 assignments and can be safely deleted
         mockMvc.perform(delete("/api/workers/" + workerId))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("Assigning with past startDate returns 400 Bad Request")
+    void assignWithPastStartDate_throws400() throws Exception {
+        WorkerRequestDto workerReq = new WorkerRequestDto("Worker Past", 8, Set.of("java"));
+        String workerRes = mockMvc.perform(post("/api/workers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(workerReq)))
+                .andReturn().getResponse().getContentAsString();
+        Number workerId = objectMapper.readTree(workerRes).get("id").numberValue();
+
+        TaskRequestDto taskReq = new TaskRequestDto("Task Past", 4, null, Set.of("java"));
+        String taskRes = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(taskReq)))
+                .andReturn().getResponse().getContentAsString();
+        Number taskId = objectMapper.readTree(taskRes).get("id").numberValue();
+
+        LocalDate pastDate = LocalDate.now().minusDays(1);
+        mockMvc.perform(post("/api/assignments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AssignmentRequestDto(taskId.longValue(), workerId.longValue(), pastDate))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("Start date cannot be in the past")));
     }
 }
 

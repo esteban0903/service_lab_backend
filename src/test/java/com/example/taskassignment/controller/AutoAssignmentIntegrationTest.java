@@ -46,7 +46,7 @@ class AutoAssignmentIntegrationTest {
     @Test
     @DisplayName("POST /api/assignments/auto end-to-end: verifies capacity limits, unassigned reporting, and existing assignments preserved")
     void autoAssign_endToEnd_verifiesCapacityLimitsAndState() throws Exception {
-        LocalDate startDate = LocalDate.of(2026, 10, 15); // Thursday
+        LocalDate startDate = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.THURSDAY));
 
         // 1. Create Worker 1 (capacity: 4h/day, skills: [java])
         String w1Res = mockMvc.perform(post("/api/workers")
@@ -151,6 +151,17 @@ class AutoAssignmentIntegrationTest {
             int hours = entry.getValue().asInt();
             assertThat(hours).as("Worker 2 daily hours on %s must not exceed 8", entry.getKey()).isLessThanOrEqualTo(8);
         }
+    }
+
+    @Test
+    @DisplayName("POST /api/assignments/auto with past startDate returns 400 Bad Request")
+    void autoAssignWithPastStartDate_throws400() throws Exception {
+        LocalDate pastDate = LocalDate.now().minusDays(1);
+        mockMvc.perform(post("/api/assignments/auto")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new AutoAssignmentRequestDto(pastDate))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", org.hamcrest.Matchers.containsString("Start date cannot be in the past")));
     }
 }
 

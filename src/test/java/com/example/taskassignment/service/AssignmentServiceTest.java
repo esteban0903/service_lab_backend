@@ -5,6 +5,7 @@ import com.example.taskassignment.domain.Task;
 import com.example.taskassignment.domain.TaskStatus;
 import com.example.taskassignment.domain.Worker;
 import com.example.taskassignment.dto.assignment.AssignmentResponseDto;
+import com.example.taskassignment.exception.BadRequestException;
 import com.example.taskassignment.exception.ConflictException;
 import com.example.taskassignment.exception.IncompatibleSkillsException;
 import com.example.taskassignment.exception.ResourceNotFoundException;
@@ -19,9 +20,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +58,9 @@ class AssignmentServiceTest {
 
     @Mock
     private CalendarService calendarService;
+
+    @Spy
+    private Clock clock = Clock.fixed(Instant.parse("2026-10-15T00:00:00Z"), ZoneId.of("UTC"));
 
     @InjectMocks
     private AssignmentService assignmentService;
@@ -249,6 +257,16 @@ class AssignmentServiceTest {
         assertThatThrownBy(() -> assignmentService.getWorkerSchedule(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Worker not found with id: 99");
+    }
+
+    @Test
+    @DisplayName("create should throw BadRequestException when startDate is in the past")
+    void create_startDateInPast_throwsBadRequest() {
+        LocalDate pastDate = LocalDate.of(2026, 10, 14);
+
+        assertThatThrownBy(() -> assignmentService.create(10L, 20L, pastDate))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Start date cannot be in the past");
     }
 }
 
