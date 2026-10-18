@@ -105,7 +105,7 @@ class WorkerServiceTest {
     @Test
     @DisplayName("getAllWorkers should return all workers mapped to DTOs")
     void getAllWorkers_shouldReturnList() {
-        when(workerRepository.findAll()).thenReturn(List.of(sampleWorker));
+        when(workerRepository.findAllWithSkills()).thenReturn(List.of(sampleWorker));
 
         List<WorkerResponseDto> all = workerService.getAllWorkers();
 

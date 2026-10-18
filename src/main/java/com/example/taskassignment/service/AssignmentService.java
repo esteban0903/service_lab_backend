@@ -96,7 +96,7 @@ public class AssignmentService {
 
     @Transactional(readOnly = true)
     public List<AssignmentResponseDto> getAll() {
-        return assignmentRepository.findAll().stream()
+        return assignmentRepository.findAllWithDetails().stream()
                 .map(AssignmentResponseDto::fromEntity)
                 .toList();
     }
@@ -117,7 +117,7 @@ public class AssignmentService {
 
     @Transactional(readOnly = true)
     public List<AssignmentResponseDto> getAssignmentsByWorkerId(Long workerId) {
-        return assignmentRepository.findByWorkerId(workerId).stream()
+        return assignmentRepository.findByWorkerIdWithDetails(workerId).stream()
                 .map(AssignmentResponseDto::fromEntity)
                 .toList();
     }

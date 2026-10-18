@@ -100,7 +100,7 @@ class TaskServiceTest {
     @Test
     @DisplayName("getAllTasks should return all tasks mapped to DTOs")
     void getAllTasks_shouldReturnList() {
-        when(taskRepository.findAll()).thenReturn(List.of(sampleTask));
+        when(taskRepository.findAllWithSkills()).thenReturn(List.of(sampleTask));
 
         List<TaskResponseDto> all = taskService.getAllTasks();
 

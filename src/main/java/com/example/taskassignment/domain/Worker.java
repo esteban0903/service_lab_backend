@@ -29,7 +29,7 @@ public class Worker {
     @Column(name = "hours_per_day", nullable = false)
     private int hoursPerDay;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "worker_skills", joinColumns = @JoinColumn(name = "worker_id"))
     @Column(name = "skill", nullable = false, length = 100)
     private Set<String> skills = new HashSet<>();

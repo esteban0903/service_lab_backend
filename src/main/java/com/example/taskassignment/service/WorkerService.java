@@ -40,7 +40,7 @@ public class WorkerService {
 
     @Transactional(readOnly = true)
     public List<WorkerResponseDto> getAllWorkers() {
-        List<Worker> workers = workerRepository.findAll();
+        List<Worker> workers = workerRepository.findAllWithSkills();
         if (workers.isEmpty()) {
             return List.of();
         }

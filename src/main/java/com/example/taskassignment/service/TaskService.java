@@ -28,7 +28,7 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<TaskResponseDto> getAllTasks() {
-        return taskRepository.findAll().stream()
+        return taskRepository.findAllWithSkills().stream()
                 .map(TaskResponseDto::fromEntity)
                 .toList();
     }

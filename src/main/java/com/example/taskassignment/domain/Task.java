@@ -35,7 +35,7 @@ public class Task {
     @Column(nullable = false, length = 20)
     private TaskStatus status = TaskStatus.NOT_DONE;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "task_skills", joinColumns = @JoinColumn(name = "task_id"))
     @Column(name = "skill", nullable = false, length = 100)
     private Set<String> skills = new HashSet<>();

@@ -15,6 +15,23 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
     boolean existsByWorkerId(Long workerId);
 
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT DISTINCT a FROM Assignment a " +
+        "JOIN FETCH a.task t " +
+        "JOIN FETCH a.worker w " +
+        "LEFT JOIN FETCH a.assignmentDays ad"
+    )
+    java.util.List<Assignment> findAllWithDetails();
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT DISTINCT a FROM Assignment a " +
+        "JOIN FETCH a.task t " +
+        "JOIN FETCH a.worker w " +
+        "LEFT JOIN FETCH a.assignmentDays ad " +
+        "WHERE a.worker.id = :workerId"
+    )
+    java.util.List<Assignment> findByWorkerIdWithDetails(@org.springframework.data.repository.query.Param("workerId") Long workerId);
+
     java.util.List<Assignment> findByWorkerId(Long workerId);
 
     void deleteByTaskId(Long taskId);
