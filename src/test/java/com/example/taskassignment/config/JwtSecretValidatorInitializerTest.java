@@ -85,3 +85,4 @@ class JwtSecretValidatorInitializerTest {
         assertThatCode(() -> initializer.initialize(context)).doesNotThrowAnyException();
     }
 }
+
