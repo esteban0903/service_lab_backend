@@ -12,5 +12,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT t FROM Task t WHERE t.status = com.example.taskassignment.domain.TaskStatus.NOT_DONE AND t.id NOT IN (SELECT a.task.id FROM Assignment a)")
     List<Task> findUnassignedNotDoneTasks();
+
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.skills")
+    List<Task> findAllWithSkills();
 }
 
